@@ -151,6 +151,59 @@ Deliberately not done in Module 4:
   any other httpx error; a real `RequestTimeout` error type is Module 6's job. Documented in
   the lab's own docstring rather than reporting a falsely-precise metric name.
 
+## Module 5 detail (done 2026-07-08)
+
+**Target execution hardware confirmed this module: a 32GB Mac.** Above all three course RAM
+tiers (8/16/24GB) — worth revisiting the model catalog (Module 3) toward 14B-class models
+once real benchmarking starts, not staying capped at what an 8-24GB machine could do.
+
+Built:
+- `docs/modules/05_serving_local_models.md` — theory chapter: direct CLI vs. local HTTP API
+  vs. OpenAI-compatible APIs, streaming (NDJSON for Ollama, SSE for OpenAI-compatible
+  servers), runtime lifecycle/warmup/unloading, prompt caching, request cancellation (with
+  an explicit verification-limits caveat), error handling, and the three serving patterns
+  (direct/gateway/router).
+- `scripts/module_05/serve_ollama.sh`, `serve_llamacpp.sh` — idempotent, health-checked
+  repeatable start scripts (`bash -n` syntax-checked, reviewed, not executed — would start a
+  runtime).
+- `scripts/module_05/ollama_streaming.py` — NDJSON stream parsing, chunk accumulation, real
+  (not approximated) TTFT from first streamed chunk, tokens/sec, and a cancellation demo with
+  an honestly-documented verification limit (client-side elapsed time is a proxy, not proof
+  of server-side compute cancellation).
+- `scripts/module_05/ollama_metadata.py` — `/api/show` probe and parser, including a dynamic
+  `<family>.context_length` key lookup verified against a realistic fixture.
+- `scripts/module_05/warmup_experiment.py` — cold-vs-warm TTFT orchestration and statistics,
+  injected TTFT function for full testability.
+- `scripts/module_05/feature_matrix.py` — 4-runtime × 6-feature comparison table
+  (structured output, grammar, token counting, streaming, cancellation, usage reporting),
+  every entry tagged `documented`/`verified=False` pending real measurement.
+- `scripts/module_05/llamacpp_openai_streaming.py` — OpenAI-client streaming against a local
+  server, extending Module 2's non-streaming smoke test.
+- `scripts/module_05/run_mlx_generate.py` — MLX warmup + streaming demo, reusing Module 2's
+  Apple-Silicon/importability checks rather than duplicating them.
+- `notebooks/05_serving_local_models.ipynb` — **executed end-to-end**; parsers proven against
+  realistic fixtures, feature matrix rendered, warmup statistics proven with a fake TTFT
+  function, real-runtime cells correctly skip (confirmed this machine **is** Apple Silicon
+  but has no `mlx_lm` installed, so the MLX skip message is accurate, not a false negative).
+- `reports/module_05_runtime_serving_matrix.md` — deliverable, including the feature matrix
+  and a full write-up of a real bug this module caught (see below).
+- 59 new unit tests (230 total in the repo now, all passing); `ruff check .` clean.
+
+**Real bug caught and fixed during this module's own build:** `run_mlx_generate.py`'s
+`summary_to_markdown` had adjacent f-string literals followed by an `if/else` — Python
+concatenates adjacent string literals *before* applying a trailing ternary, so the whole
+multi-line report would have silently collapsed to one line whenever `stream_total_seconds`
+was `None`. Caught by writing the test for that case before considering the function done,
+not by inspection. Fixed and left the regression test in place with an explanatory comment.
+
+Deliberately not done in Module 5:
+- No real per-runtime measurement (flipping `feature_matrix.py` entries from `documented` to
+  `measured`) — machine constraint. Every parser/orchestrator that will produce real
+  observations is built and unit-tested; completing this is running it, not building it.
+- The `failure_rate`-vs-`timeout_rate` gap noted in Module 4 is still open and now also
+  affects `ollama_streaming.py`'s cancellation demo — still deferred to Module 6's error
+  taxonomy, not patched ad hoc per-module.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -159,7 +212,7 @@ Deliberately not done in Module 4:
 | 2. Mac local AI dev environment | [x] | [x] | [x] | [~] | Lab 2.1 (dev tools) fully done; Labs 2.2-2.4 pending a resourced Mac |
 | 3. Local model selection and benchmarking | [x] | [x] | [x] | [~] | harness fully built + proven against fakes; real 3-model run pending a resourced Mac |
 | 4. Quantization, context, memory math | [x] | [x] | [x] | [~] | formulas verified against every theory-doc number; real measurement pending a resourced Mac |
-| 5. Serving local models | [ ] | [ ] | [ ] | [ ] | not started |
+| 5. Serving local models | [x] | [x] | [x] | [~] | feature matrix + all parsers built and tested; real per-runtime measurement pending a resourced Mac |
 | 6. Python client architecture | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 1.5 — Serving/performance foundation
@@ -204,6 +257,7 @@ Captured during Phase 0 setup, `2026-07-08`:
 - **`ollama` is NOT installed on this machine, and never will be — standing constraint, confirmed by the user in Module 2.** This machine has limited disk/memory and is not used to run local models; all course content is built and practiced here, then executed on a separate, better-resourced Mac. Module 1/2 labs that require running an actual local model (multi-model comparison, long-prompt stress test, runtime smoke tests) are written to run correctly there; deliverable reports honestly record "not run — no local runtime available" rather than fabricated numbers, per the course's own honesty rule (§4.1 of the bible: never claim numbers that weren't measured).
 - `llama.cpp` / `llama-cpp-python` / `MLX` confirmed not installed (Module 2) — and per the constraint above, will not be installed on this machine.
 - Real gap found in Module 2: `ripgrep` (the `rg` binary) is not actually installed here, only shadowed by a terminal shell function — `brew install ripgrep` needed on a fresh machine following this README.
+- **Target execution hardware confirmed in Module 5: a 32GB Mac.** This is above all three course RAM tiers (8/16/24GB) — when real benchmarking starts (Module 3 rerun, Module 4 measurement), revisit `models/MODEL_CATALOG.md` to include 14B-class models rather than staying capped at what an 8-24GB machine could do. Chip (Apple Silicon vs. Intel) not yet confirmed — this machine's own `uname -m` is `arm64`/Apple Silicon (Module 2), but that doesn't tell us about the target machine; confirm before assuming MLX labs are runnable there.
 
 ## Working conventions for this build
 

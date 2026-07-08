@@ -180,17 +180,31 @@ against a dummy process, since no model runtime runs on this machine).
   found: the doc's 128K-context row is a rounded approximation); real measurement pending a
   resourced Mac.
 
-#### ⬜ Module 5 — Serving local models
+#### ✅ Module 5 — Serving local models
 
 Compares serving patterns (direct CLI, local HTTP API, OpenAI-compatible server, gateway) and
 runtime-specific behavior (streaming, warmup, cancellation, error handling) across Ollama,
-llama.cpp, and MLX.
+llama.cpp, and MLX. Includes a documented (not yet measured) 4-runtime × 6-feature comparison
+matrix.
 
-- **Read:** curriculum.md §15
-- **Run:** not yet built — `scripts/serve_ollama.sh`, `scripts/serve_llamacpp.sh`,
-  `scripts/run_mlx_generate.py`
-- **Install needed:** runtimes from Module 2
-- **Deliverable:** `reports/runtime_serving_matrix.md` (not yet built)
+- **Read:** [docs/modules/05_serving_local_models.md](docs/modules/05_serving_local_models.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/05_serving_local_models.ipynb   # proves parsers against fixtures + renders the feature matrix, no installs needed
+  bash scripts/module_05/serve_ollama.sh qwen2.5:3b             # needs Ollama (Module 2)
+  bash scripts/module_05/serve_llamacpp.sh python /path/to/model.gguf   # needs llama-cpp-python[server]
+  uv run python scripts/module_05/ollama_metadata.py --model qwen2.5:3b
+  uv run python scripts/module_05/llamacpp_openai_streaming.py
+  uv run python scripts/module_05/run_mlx_generate.py --model mlx-community/Qwen2.5-1.5B-Instruct-4bit
+  uv run pytest scripts/module_05 -q                            # 59 tests, no runtime needed
+  ```
+- **Install needed:** nothing for the notebook's fixture-based parser proofs or the feature
+  matrix. Live labs need the corresponding runtime from Module 2 (MLX labs also need Apple
+  Silicon — confirmed present on this dev machine, not yet confirmed on the target 32GB Mac).
+- **Deliverable:** [reports/module_05_runtime_serving_matrix.md](reports/module_05_runtime_serving_matrix.md)
+  — feature matrix fully documented; also records a real f-string/ternary bug this module
+  caught and fixed via its own test suite. Real per-runtime measurement pending the resourced
+  32GB Mac.
 
 #### ⬜ Module 6 — Python client architecture
 

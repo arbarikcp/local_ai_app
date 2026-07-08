@@ -24,7 +24,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "tests"]
-pythonpath = ["packages/local_ai_core", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04"]
+pythonpath = ["packages/local_ai_core", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05"]
 
 [tool.ruff]
 line-length = 100
