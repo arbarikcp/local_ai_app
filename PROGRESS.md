@@ -40,12 +40,45 @@ Deliberately not done in Module 1 (belongs to a later module):
 - No `LLMRuntime` abstraction/package code under `packages/local_ai_core/` — that's Module 6.
 - No actual model install/run — that's Module 2 (environment setup) prerequisite work.
 
+## Module 2 detail (done 2026-07-08)
+
+**Hard constraint for this whole repo, discovered/confirmed this module:** the Mac used to
+build this course has limited disk/memory and **must never have a model runtime (Ollama,
+llama.cpp/llama-cpp-python, MLX) or model weights installed on it.** All model-execution labs
+across every module are built to run correctly elsewhere and are deliberately left in a
+verified "pending live run on a resourced machine" state here — this is now a standing rule,
+not a one-time gap (see the machine-constraints project memory).
+
+Built:
+- `docs/modules/02_mac_local_ai_development_environment.md` — theory chapter covering Apple
+  Silicon vs Intel, dev tools, Homebrew, uv project setup, all three runtime install paths
+  (Ollama, llama.cpp+Metal, llama-cpp-python, MLX), model cache locations per runtime, and
+  disk usage/cleanup commands.
+- `notebooks/02_mac_environment_setup.ipynb` — executed end-to-end; runs the real dev-tool
+  check, cache scan, and all three runtime smoke tests live.
+- `scripts/module_02/`: `mac_environment_check.py` (read-only tool/version probe),
+  `model_cache.py` (cache location + size scanner, symlink-safe), `smoke_test_ollama.py`,
+  `smoke_test_llamacpp_server.py`, `smoke_test_mlx.py`, `smoke_test_runtimes.py` (orchestrator
+  that renders the combined deliverable report), `setup_mac.sh` (documented install commands,
+  reviewed but **not executed** on this machine). `tests/` adds 23 new pytest unit tests (65
+  total in the repo now, all passing); `ruff check .` clean.
+- `reports/module_02_environment_report.md` — deliverable. Lab 2.1 (dev tools) fully run and
+  found a real gap (`ripgrep`/`rg` binary not actually installed, only shadowed by a shell
+  function in interactive terminals — `shutil.which` correctly caught this). Labs 2.2–2.4
+  (actual runtime smoke tests) executed and correctly produced skip results with exact
+  install commands, since no runtime is installed here by design.
+
+Deliberately not done in Module 2:
+- No brew install of Ollama/llama.cpp/MLX and no model download — machine constraint, not an
+  oversight. `scripts/module_02/setup_mac.sh` documents the commands for the resourced Mac.
+- No `LLMRuntime` abstraction — still Module 6's job.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
-| 1. Local LLM systems thinking | [x] | [x] | [x] | [~] | infra done; empirical labs blocked on Ollama install (Module 2) |
-| 2. Mac local AI dev environment | [ ] | [ ] | [ ] | [ ] | not started |
+| 1. Local LLM systems thinking | [x] | [x] | [x] | [~] | infra done; empirical labs pending a resourced Mac |
+| 2. Mac local AI dev environment | [x] | [x] | [x] | [~] | Lab 2.1 (dev tools) fully done; Labs 2.2-2.4 pending a resourced Mac |
 | 3. Local model selection and benchmarking | [ ] | [ ] | [ ] | [ ] | not started |
 | 4. Quantization, context, memory math | [ ] | [ ] | [ ] | [ ] | not started |
 | 5. Serving local models | [ ] | [ ] | [ ] | [ ] | not started |
@@ -90,8 +123,9 @@ Captured during Phase 0 setup, `2026-07-08`:
 
 - Python 3.13.5 available system-wide; project pinned to Python 3.12 via `uv`.
 - `uv` 0.6.8 available.
-- **`ollama` is NOT installed on this machine.** Module 1/2 labs that require running an actual local model (multi-model comparison, long-prompt stress test, runtime smoke tests) cannot be executed end-to-end here yet. Code and labs are written to run correctly once a runtime is installed; until then, deliverable reports honestly record "not run — no local runtime available" rather than fabricated numbers, per the course's own honesty rule (§4.1 of the bible: never claim numbers that weren't measured).
-- `llama.cpp` / `llama-cpp-python` / `MLX` also not verified installed — to be checked in Module 2.
+- **`ollama` is NOT installed on this machine, and never will be — standing constraint, confirmed by the user in Module 2.** This machine has limited disk/memory and is not used to run local models; all course content is built and practiced here, then executed on a separate, better-resourced Mac. Module 1/2 labs that require running an actual local model (multi-model comparison, long-prompt stress test, runtime smoke tests) are written to run correctly there; deliverable reports honestly record "not run — no local runtime available" rather than fabricated numbers, per the course's own honesty rule (§4.1 of the bible: never claim numbers that weren't measured).
+- `llama.cpp` / `llama-cpp-python` / `MLX` confirmed not installed (Module 2) — and per the constraint above, will not be installed on this machine.
+- Real gap found in Module 2: `ripgrep` (the `rg` binary) is not actually installed here, only shadowed by a terminal shell function — `brew install ripgrep` needed on a fresh machine following this README.
 
 ## Working conventions for this build
 

@@ -25,13 +25,19 @@ pinned in `pyproject.toml` / `uv.lock`.
 
 ### The one thing to know before you start
 
-**No local model runtime (Ollama / llama.cpp / MLX) is installed on the machine this repo
-was built on.** Module 2 is where you install one. Until then, every module's labs that
-require an actual model run will say so explicitly — in the theory doc, in the notebook
-output, and in the deliverable report — rather than presenting fabricated numbers. See
-`reports/module_01_local_llm_observations.md` for what that looks like in practice. If you
-*do* have Ollama/llama.cpp/MLX already installed, you can run those labs for real starting
-now; just note it in the module's report.
+**This repo is built and practiced on a Mac that must never have a model runtime or model
+weights installed on it** (limited disk/memory). Ollama, llama.cpp/llama-cpp-python, and MLX
+are deliberately never installed here — that is a standing constraint, not a temporary gap
+closed by Module 2. The plan is: build every module's theory/notebook/code/tests here, then
+execute the model-running labs later on a separate, properly resourced Mac using the exact
+commands each module documents.
+
+Every module's labs that require an actual model run say so explicitly — in the theory doc,
+in the notebook output, and in the deliverable report — rather than presenting fabricated
+numbers. See `reports/module_01_local_llm_observations.md` and
+`reports/module_02_environment_report.md` for what that looks like in practice. If *you* are
+running this repo on a properly resourced Mac, you can run those labs for real; just fold the
+output into the module's report in place of the "SKIPPED" sections.
 
 ## How every module is packaged
 
@@ -100,22 +106,32 @@ instead of a grab-bag of framework tutorials.
   uv run pytest scripts/module_01 -q                        # 19 tests, no runtime needed
   ```
 - **Install needed:** nothing for the notebook's memory-math and tokenizer-fallback cells or
-  for the unit tests. Labs 1.1–1.3 need Ollama running with models pulled (Module 2 sets this
-  up) — without it they print an explicit skip message, they do not fail silently or fake data.
+  for the unit tests. Labs 1.1–1.3 need Ollama running with models pulled — without it they
+  print an explicit skip message, they do not fail silently or fake data.
 - **Deliverable:** [reports/module_01_local_llm_observations.md](reports/module_01_local_llm_observations.md)
-  (infra complete; empirical lab results pending Module 2's install).
+  (infra complete; empirical lab results pending a resourced Mac — see the constraint above).
 
-#### ⬜ Module 2 — Mac local AI development environment
+#### ✅ Module 2 — Mac local AI development environment
 
-Turns the Mac into a reliable local-AI workstation: installs and smoke-tests Ollama,
-llama-cpp-python, and MLX so Module 1's labs (and everything after) have a real runtime to
-run against.
+Turns a Mac into a reliable local-AI workstation: dev tool check, model-cache accounting, and
+smoke tests for all three runtimes (Ollama, llama-cpp-python server, MLX) so Module 1's labs
+(and everything after) have a real runtime to run against — on the *other* machine.
 
-- **Read:** curriculum.md §12 (not yet split into its own `docs/modules/` chapter)
-- **Run:** not yet built — will live at `scripts/smoke_test_ollama.py`,
-  `scripts/smoke_test_llamacpp_server.py`, `scripts/smoke_test_mlx.py`
-- **Install needed:** Homebrew, then Ollama, llama-cpp-python (with Metal support), MLX/mlx-lm
-- **Deliverable:** `reports/environment_report.md` (not yet built)
+- **Read:** [docs/modules/02_mac_local_ai_development_environment.md](docs/modules/02_mac_local_ai_development_environment.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/02_mac_environment_setup.ipynb   # dev-tool check + cache scan + all 3 smoke tests, no installs
+  uv run python scripts/module_02/mac_environment_check.py      # standalone dev-tool check
+  uv run python scripts/module_02/model_cache.py                # standalone cache report
+  uv run python scripts/module_02/smoke_test_runtimes.py         # full combined report (what produced the deliverable)
+  uv run pytest scripts/module_02 -q                             # 23 tests, no runtime needed
+  ```
+- **Install needed:** nothing to read/run the checks themselves — they're read-only. To
+  actually complete Labs 2.2–2.4 (on a resourced Mac): `bash scripts/module_02/setup_mac.sh`
+  first (brew tools, Ollama, llama-cpp-python, MLX — reviewed line by line before running).
+- **Deliverable:** [reports/module_02_environment_report.md](reports/module_02_environment_report.md)
+  — Lab 2.1 (dev tools) fully run here and found a real gap (`ripgrep` binary missing, only
+  shadowed by a shell function); Labs 2.2–2.4 pending the resourced Mac.
 
 #### ⬜ Module 3 — Local model selection and benchmarking
 
@@ -305,3 +321,7 @@ Each project consumes several modules' worth of packages. Status tracked in PROG
   against, the report says so and gives the exact command to complete it later.
 - Module code stays inside its own module/package boundary; cross-module changes get flagged
   before being made, not made silently.
+- **Never install a model runtime or model weights on this machine** (see "The one thing to
+  know before you start" above) — that work is deferred to a separate, resourced Mac.
+- Every completed module gets an annotated git tag (`module-NN`) so any module's finished
+  state can be checked out directly: `git checkout module-02`.
