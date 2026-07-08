@@ -376,6 +376,60 @@ Deliberately not done in Module 7:
   model whose behavior is sensitive to prompt content; machine constraint. Harness fully
   built and unit-tested; completing this is running two commands on the resourced Mac.
 
+## Module 8 detail (done 2026-07-08)
+
+The full production extraction pipeline — every reliability layer from constrained decoding
+through human review — built and fully verified against `FakeRuntime`, like Modules 6/6.5/7.
+
+Built:
+- `docs/modules/08_structured_output_and_extraction.md` — theory chapter: why free-form
+  output is fragile, JSON mode vs. schema-constrained output, the 4-layer reliability ladder
+  (constrained decoding → schema validation → repair retry → human review), the 7-layer
+  validation strategy, streaming-vs-structured ("stream prose, buffer structure"), and every
+  Gotcha from the curriculum mapped to a specific piece of code that handles it.
+- `packages/local_ai_core/extraction/`: `schemas.py` (curriculum's own `InvoiceExtraction`
+  verbatim + `PersonExtraction`), `chunking.py` (paragraph/word-boundary-safe chunking +
+  conflict-flagging merge), `confidence.py` (deterministic, model-independent scoring —
+  explicitly proven to ignore a model's own self-reported confidence), `review_queue.py`,
+  `json_parsing.py` (small intentional duplication of Module 3's logic to preserve the
+  packages/scripts layering boundary), and `pipeline.py` (the full `ExtractionPipeline`:
+  constrained-decoding-first with recorded `FeatureNotSupported` fallback, bounded repair
+  retry, chunked extraction, review-queue integration).
+- `scripts/module_08/constrained_decoding_runner.py` (Lab 8: text vs. json_schema vs.
+  grammar comparison) and `extraction_eval.py` (Lab 7: golden-label evaluation), both reusing
+  Module 3's golden extraction set directly rather than duplicating test data.
+- `notebooks/08_structured_output_and_extraction.ipynb` — **executed end-to-end**; every
+  reliability layer demonstrated live (clean extraction, repair retry, review-queue firing,
+  chunked merge, 3-mode comparison with realistic fake capability differences).
+- `reports/module_08_structured_output_reliability_report.md` — deliverable, including
+  full write-ups of three things this module's own process caught (below).
+- 116 new tests (660 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+**Three real issues caught by this module's own tests/process, not by inspection:**
+1. `chunking.py`'s hard-split fallback sliced paragraphs by raw character position, which
+   split a word in half across a chunk boundary — caught by a test asserting no word is
+   lost, fixed by splitting on whitespace instead.
+2. `ExtractionPipeline.__init__` used `review_queue or ReviewQueue()` to default an unset
+   queue; since `ReviewQueue` defines `__len__`, an empty (falsy) caller-provided queue was
+   silently replaced by a different instance, hiding enqueued items from the caller. Fixed
+   with an explicit `is not None` check; grepped the repo for the same pattern elsewhere
+   (none found).
+3. A notebook demo cell claimed to show the review queue firing but didn't, because one risk
+   factor alone only downgrades confidence to "medium" (which doesn't trigger review by
+   default) — caught while executing the notebook, fixed by adding a second risk factor so
+   the demo actually matches its own narrative.
+
+Deliberately not done in Module 8:
+- No real 3-model / 3-mode comparison against actual models — machine constraint. Harness
+  fully built and unit-tested; completing this is running two commands on the resourced Mac.
+- `placeholder_gbnf_grammar()` is explicitly NOT a real, schema-complete GBNF grammar — real
+  JSON-Schema-to-GBNF generation is a nontrivial ecosystem tool, out of scope to reimplement;
+  the placeholder only exercises the pipeline's grammar-request code path end to end.
+- Lab 7/8 are scoped to the 2 of Module 3's 6 golden records that match `PersonExtraction`'s
+  schema — the other 4 use different schemas this module doesn't model. Documented as a thin
+  sample rather than padded with schema-mismatched data.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -399,7 +453,7 @@ Deliberately not done in Module 7:
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 7. Prompt engineering for small local models | [x] | [x] | [x] | [~] | prompt infra fully built + verified; real 3-model comparison and real compression-quality tradeoff pending a resourced Mac |
-| 8. Structured output and extraction | [ ] | [ ] | [ ] | [ ] | not started |
+| 8. Structured output and extraction | [x] | [x] | [x] | [~] | full reliability-ladder pipeline built + verified via FakeRuntime; real 3-model/3-mode comparison pending a resourced Mac |
 | 8.5. Conversation and context management | [ ] | [ ] | [ ] | [ ] | not started |
 | 9. Embeddings from first principles | [ ] | [ ] | [ ] | [ ] | not started |
 | 10. Vector search and local vector databases | [ ] | [ ] | [ ] | [ ] | not started |

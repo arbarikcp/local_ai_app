@@ -284,11 +284,27 @@ tradeoff need one.
   — includes an explicit honesty note that the compression-quality comparison needs a real
   model to mean anything, and doesn't claim otherwise.
 
-#### ⬜ Module 8 — Structured output and extraction
+#### ✅ Module 8 — Structured output and extraction
 
 Builds reliable local extraction: constrained decoding (grammar/JSON-schema) as the *primary*
-reliability layer, Pydantic validation, repair retries, confidence scoring, and human review
-queues, in that priority order. — curriculum.md §18
+reliability layer, Pydantic validation, repair retries, deterministic (never model-self-reported)
+confidence scoring, and human review queues, in that priority order. Like Modules 6/6.5/7,
+fully built and verified without a live runtime.
+
+- **Read:** [docs/modules/08_structured_output_and_extraction.md](docs/modules/08_structured_output_and_extraction.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/08_structured_output_and_extraction.ipynb   # live-demonstrates the full reliability ladder, no installs needed
+  uv run python scripts/module_08/constrained_decoding_runner.py --model qwen2.5:1.5b   # needs Ollama
+  uv run python scripts/module_08/extraction_eval.py --model qwen2.5:1.5b                 # needs Ollama
+  uv run pytest packages/local_ai_core/extraction scripts/module_08 -q     # 116 tests, no runtime needed
+  ```
+- **Install needed:** nothing for the pipeline itself (constrained decoding, repair retry,
+  confidence scoring, review queue, chunking are all proven against `FakeRuntime`). Real
+  model runs need Ollama (Module 2).
+- **Deliverable:** [reports/module_08_structured_output_reliability_report.md](reports/module_08_structured_output_reliability_report.md)
+  — includes full write-ups of two real bugs and one caught demo gap from this module's own
+  build process.
 
 #### ⬜ Module 8.5 — Conversation and context management
 
