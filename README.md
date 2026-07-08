@@ -155,16 +155,30 @@ best local model" once and hard-coding it.
   template) — harness fully built and proven against fake models; real comparison pending a
   resourced Mac.
 
-#### ⬜ Module 4 — Quantization, context, and memory math
+#### ✅ Module 4 — Quantization, context, and memory math
 
 Derives the exact weights + KV-cache memory formulas (already previewed in Module 1's
 notebook) and pairs every prediction with a *measured* number, so "this model fits" becomes a
-verifiable claim instead of a guess.
+verifiable claim instead of a guess. Includes real, working memory-sampling tooling (proven
+against a dummy process, since no model runtime runs on this machine).
 
-- **Read:** curriculum.md §14
-- **Run:** not yet built — predict-then-measure lab against Module 2's runtimes
-- **Install needed:** a runtime + at least one model at multiple quantizations
-- **Deliverable:** `reports/quantization_context_memory_report.md` (not yet built)
+- **Read:** [docs/modules/04_quantization_context_and_memory_math.md](docs/modules/04_quantization_context_and_memory_math.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/04_quantization_context_memory_math.ipynb   # reproduces every theory-doc number + proves the memory sampler, no installs needed
+  uv run python scripts/module_04/lab_4_1_quantization_comparison.py --tags <tag1> <tag2>   # needs Ollama + models at multiple quantizations
+  uv run python scripts/module_04/lab_4_2_context_scaling.py --model qwen2.5:3b
+  uv run python scripts/module_04/lab_4_3_concurrency_simulation.py --model qwen2.5:3b
+  uv run python scripts/module_04/lab_4_4_predict_then_measure.py --model-tag <tag> --shape qwen2.5-7b   # the core predict-vs-actual deliverable
+  uv run pytest scripts/module_04 -q                          # 57 tests, no runtime needed
+  ```
+- **Install needed:** nothing for the formulas, model-shape registry, or memory sampler
+  (real tooling, proven against a dummy subprocess). The four labs need Ollama running with
+  models pulled (Lab 4.1 needs the same model at 2+ quantization tags).
+- **Deliverable:** [reports/module_04_quantization_context_memory_report.md](reports/module_04_quantization_context_memory_report.md)
+  — every formula verified against the theory doc's worked examples (and one real discrepancy
+  found: the doc's 128K-context row is a rounded approximation); real measurement pending a
+  resourced Mac.
 
 #### ⬜ Module 5 — Serving local models
 

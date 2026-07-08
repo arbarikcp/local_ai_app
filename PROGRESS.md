@@ -112,6 +112,45 @@ Deliberately not done in Module 3:
   those; `run_benchmark.py` doesn't surface them in its tables yet. Noted as a gap, not
   silently dropped.
 
+## Module 4 detail (done 2026-07-08)
+
+Built:
+- `docs/modules/04_quantization_context_and_memory_math.md` — theory chapter: quantization
+  formats and GGUF naming, quality/performance trade-offs, the exact weights and KV-cache
+  formulas (extending Module 1's preview), the full memory budget, prompt compression,
+  batch/concurrency, Apple unified memory, runtime overhead, KV-cache quantization as a
+  first-class lever, and reranker/embedder memory contention.
+- `scripts/module_04/memory_math.py` — `weights_bytes`, `kv_cache_bytes`,
+  `estimate_memory_budget`, unit-tested against every number in the theory doc's tables.
+  Documents and preserves the curriculum's own mixed-unit convention (decimal GB for
+  weights, binary GiB for KV cache) rather than silently "fixing" it.
+- `scripts/module_04/model_shapes.py` — documented (not measured) architecture shapes for
+  4 course models (Llama 3.1 8B, Qwen2.5 7B/1.5B, Qwen2.5-Coder 7B).
+- `scripts/module_04/memory_sampler.py` — **real, working** process-RSS peak sampler
+  (`ps`-based) and process-finder (`pgrep`-based), proven in the executed notebook against a
+  dummy subprocess that allocates ~200MB — correctly tracked a 148MB+ peak.
+- `scripts/module_04/lab_4_{1,2,3,4}_*.py` — all four labs (quantization comparison, context
+  scaling, concurrency simulation, predict-then-measure), each wired to Module 1's
+  `ollama_probe.py` and this module's memory sampler, each with the same honest-skip
+  behavior as every prior module's labs.
+- `notebooks/04_quantization_context_memory_math.ipynb` — **executed end-to-end**;
+  reproduces every theory-doc worked example as live computed numbers, proves the memory
+  sampler works, and correctly skips the real-Ollama section.
+- `reports/module_04_quantization_context_memory_report.md` — deliverable. Also caught and
+  documented one real discrepancy: the theory doc's 128K-context KV-cache row is a rounded
+  approximation (~16.0 GiB) of a non-power-of-two token count; the exact formula computes
+  15.625 GiB for literally 128,000 tokens — noted rather than silently forced to match.
+- 57 new unit tests (171 total in the repo now, all passing); `ruff check .` clean.
+
+Deliberately not done in Module 4:
+- No real quantization comparison, context-scaling measurement, concurrency simulation, or
+  predict-vs-actual gap analysis — machine constraint. All four labs are built, unit-tested,
+  and given exact commands to run on a resourced Mac in the deliverable report.
+- `lab_4_3`'s `ConcurrencyLevelResult` reports `failure_rate`, not the curriculum's literal
+  `timeout_rate` — Module 1's `ollama_probe.generate` can't yet distinguish a timeout from
+  any other httpx error; a real `RequestTimeout` error type is Module 6's job. Documented in
+  the lab's own docstring rather than reporting a falsely-precise metric name.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -119,7 +158,7 @@ Deliberately not done in Module 3:
 | 1. Local LLM systems thinking | [x] | [x] | [x] | [~] | infra done; empirical labs pending a resourced Mac |
 | 2. Mac local AI dev environment | [x] | [x] | [x] | [~] | Lab 2.1 (dev tools) fully done; Labs 2.2-2.4 pending a resourced Mac |
 | 3. Local model selection and benchmarking | [x] | [x] | [x] | [~] | harness fully built + proven against fakes; real 3-model run pending a resourced Mac |
-| 4. Quantization, context, memory math | [ ] | [ ] | [ ] | [ ] | not started |
+| 4. Quantization, context, memory math | [x] | [x] | [x] | [~] | formulas verified against every theory-doc number; real measurement pending a resourced Mac |
 | 5. Serving local models | [ ] | [ ] | [ ] | [ ] | not started |
 | 6. Python client architecture | [ ] | [ ] | [ ] | [ ] | not started |
 
