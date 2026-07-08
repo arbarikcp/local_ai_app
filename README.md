@@ -231,16 +231,28 @@ adapter's real code without a live model runtime.
 
 ### Phase: Serving/performance foundation
 
-#### ⬜ Module 6.5 — Serving concurrency, batching, and caching
+#### ✅ Module 6.5 — Serving concurrency, batching, and caching
 
 Explains why a single unified-memory Mac is often a single-sequence machine, how to measure
 queueing/latency under concurrency, and how response/semantic/KV-prefix/embedding caching
 avoid recomputation — landing on `max_concurrent_requests: 1` as a deliberate, measured
-default rather than an accident.
+default rather than an accident. Like Module 6, most of this is fully verified without a live
+runtime: `FakeRuntime`'s simulated latency proves queueing and caching for real.
 
-- **Read:** curriculum.md §16.5
-- **Install needed:** Module 6's runtime abstraction
-- **Deliverable:** `reports/serving_concurrency_report.md` (not yet built)
+- **Read:** [docs/modules/06_5_serving_concurrency_batching_caching.md](docs/modules/06_5_serving_concurrency_batching_caching.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/06_5_serving_concurrency_batching_caching.ipynb   # live-demonstrates everything, no installs needed
+  uv run python scripts/module_06_5/lab_caching_before_after.py                  # runs for real right now, no runtime needed
+  uv run python scripts/module_06_5/lab_measure_concurrency.py --model qwen2.5:3b   # needs Ollama
+  uv run pytest packages/local_ai_core/gateway scripts/module_06_5 -q             # 88 tests, no runtime needed
+  ```
+- **Install needed:** nothing for the queue/cache/admission-control infrastructure or the
+  caching before/after lab. Real 1/2/4-concurrency measurement needs Ollama running (Module 2).
+- **Deliverable:** [reports/module_06_5_serving_concurrency_report.md](reports/module_06_5_serving_concurrency_report.md)
+  — includes a real 4.05x caching speedup measurement and a full write-up of a real
+  concurrency-accounting bug this module's own tests caught. Real per-runtime concurrency
+  measurement pending the resourced 32GB Mac.
 
 #### ⬜ Module 20 — Inference optimization under 8–24 GB RAM
 

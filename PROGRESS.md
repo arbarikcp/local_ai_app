@@ -265,6 +265,55 @@ Deliberately not done in Module 6:
   yet raised by any adapter — intentionally: they're Module 14's and Module 22's territory
   respectively, declared now so the taxonomy is complete rather than extended piecemeal later.
 
+## Module 6.5 detail (done 2026-07-08)
+
+Like Module 6, most of this module needed no honest-skip labs: `FakeRuntime`'s simulated
+latency (Module 6) is exactly what queueing/caching proofs need.
+
+Built:
+- `docs/modules/06_5_serving_concurrency_batching_caching.md` — theory chapter: local vs.
+  cloud serving, single- vs. multi-sequence behavior, queueing vs. rejection, Ollama/llama.cpp
+  concurrency knobs, the context-per-slot trap, the full caching strategy table, the
+  invariant-prompt-prefix-first layout rule, thermal throttling/backpressure, and why
+  `max_concurrent_requests: 1` is the honest default.
+- `packages/local_ai_core/gateway/queue.py` — `BoundedRequestQueue`: real concurrency
+  limiting (measured, not assumed), queue-wait-vs-execution-time split, admission rejection.
+- `cache.py` — `ResponseCache` (exact-match, LRU), `SemanticCache` (cosine-similarity,
+  conservative default threshold, returns the matched score for auditability),
+  `EmbeddingCache` (LRU, ready for Module 9-11's ingestion pipeline). `response_cache_key()`
+  takes quantization/tool/schema/safety-policy versions as explicit parameters so omitting
+  one is a visible choice.
+- `admission_control.py` — `AdmissionPolicy` (rejects unjustified concurrency > 1 at
+  construction time), `recommend_policy_from_measurements()` (p95-and-failure-rate-gated).
+- `scripts/module_06_5/lab_caching_before_after.py` — **runs for real, no runtime needed**;
+  produced a genuine 4.05x speedup and 75% hit rate against `FakeRuntime`'s simulated latency.
+- `scripts/module_06_5/lab_measure_concurrency.py` — real 1/2/4-concurrency measurement
+  harness using this module's own queue/admission-control layer (extending Module 4's raw
+  concurrency simulation, which had neither); honest-skip pending the resourced Mac.
+- `notebooks/06_5_serving_concurrency_batching_caching.ipynb` — **executed end-to-end**,
+  every piece of infrastructure demonstrated live with real numbers.
+- `reports/module_06_5_serving_concurrency_report.md` — deliverable, including a full
+  write-up of a real concurrency-accounting bug this module's own tests caught (below).
+- 88 new tests (481 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+**A real bug caught by this module's own tests:** `BoundedRequestQueue`'s first
+implementation conflated "no room to wait" with "no room to run" — `max_queue_size=0`
+rejected even the very first, uncontended request, because the admission check compared a
+`_waiting` counter incremented on every submission against `max_queue_size` before checking
+whether a concurrency slot was actually free. A second, related bug: a request that had to
+wait was never counted as "running" once admitted, so subsequent admission decisions could
+undercount real concurrency. Fixed by tracking `_running`/`_waiting` explicitly as the
+source of truth for admission, with the semaphore kept strictly in lockstep as the blocking
+mechanism rather than the source of truth. Two regression tests guard both bugs.
+
+Deliberately not done in Module 6.5:
+- No real 1/2/4-concurrency measurement against an actual runtime, and no comparison of two
+  runtime settings (e.g. `OLLAMA_NUM_PARALLEL` values) — machine constraint. Harness fully
+  built and unit-tested; completing this is running `lab_measure_concurrency.py` twice.
+- KV-prefix reuse (theory doc §9) is documented but not implemented as application code —
+  it's runtime-level behavior, not something this layer controls directly.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -280,7 +329,7 @@ Deliberately not done in Module 6:
 
 | Module | Status |
 |---|---|
-| 6.5 Serving concurrency, batching, caching | not started |
+| 6.5 Serving concurrency, batching, caching | complete — gateway infra (queue/cache/admission control) fully built and verified; real 1/2/4-concurrency measurement pending a resourced Mac |
 | 20. Inference optimization under 8–24GB | not started |
 
 ## Phase 2 — Application primitives (Modules 7–10, 8.5)
