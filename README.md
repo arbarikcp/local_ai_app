@@ -206,16 +206,28 @@ matrix.
   caught and fixed via its own test suite. Real per-runtime measurement pending the resourced
   32GB Mac.
 
-#### ⬜ Module 6 — Python client architecture
+#### ✅ Module 6 — Python client architecture
 
 Defines the **one** reusable `LLMRuntime` abstraction (request/response types, streaming
 interface, error taxonomy, retries) that every later module builds on — informed by what
-Modules 1–5 actually observed runtimes doing, not designed speculatively.
+Modules 1–5 actually observed runtimes doing, not designed speculatively. Fully built and
+verified with no honest-skip labs: `FakeRuntime` + `httpx.MockTransport` exercise every
+adapter's real code without a live model runtime.
 
-- **Read:** curriculum.md §16
-- **Run:** not yet built — will live at `packages/local_ai_core/runtimes/`
-- **Install needed:** runtimes from Module 2
-- **Deliverable:** `packages/local_ai_core/runtimes/` + `tests/`
+- **Read:** [docs/modules/06_python_client_architecture.md](docs/modules/06_python_client_architecture.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/06_python_client_architecture.ipynb   # live-demonstrates all 4 adapters, no installs needed
+  uv run pytest packages/local_ai_core/runtimes -q                    # 165 passing + 2 correctly-skipped, no runtime needed
+  ```
+- **Install needed:** nothing — this module's adapters are tested via `FakeRuntime` and
+  `httpx.MockTransport`, not a live server. Pointing `OllamaRuntime()`/
+  `OpenAICompatibleRuntime()` at a *real* server (to confirm the mocks' assumptions hold) is
+  the one thing still pending the resourced 32GB Mac.
+- **Deliverable:** [reports/module_06_python_client_architecture_report.md](reports/module_06_python_client_architecture_report.md)
+  — includes full write-ups of two real bugs this module's own tests caught (an
+  SDK-vs-adapter double-retry composition risk, and a false uniform-capability assumption in
+  the contract test itself).
 
 ### Phase: Serving/performance foundation
 

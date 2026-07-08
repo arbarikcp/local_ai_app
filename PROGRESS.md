@@ -204,6 +204,67 @@ Deliberately not done in Module 5:
   affects `ollama_streaming.py`'s cancellation demo — still deferred to Module 6's error
   taxonomy, not patched ad hoc per-module.
 
+## Module 6 detail (done 2026-07-08)
+
+**The canonical `LLMRuntime` abstraction now exists** — `packages/local_ai_core/runtimes/`.
+Every module from here on uses this instead of lab-local code. Unlike every prior module,
+this one needed no honest-skip labs: `FakeRuntime` and `httpx.MockTransport` let the whole
+abstraction be built and verified without a live runtime.
+
+Built:
+- `docs/modules/06_python_client_architecture.md` — theory chapter covering the runtime
+  abstraction, request/response types, streaming interface, the error taxonomy (and how it
+  resolves Modules 4/5's `failure_rate`-vs-`timeout_rate` gap), retries, timeouts, metrics
+  hooks, dependency injection, and the two-tier testing strategy (`FakeRuntime` +
+  `httpx.MockTransport`) with an explicit statement of what that does/doesn't prove.
+- `packages/local_ai_core/runtimes/types.py` — `LLMRequest`/`LLMResponse`/`ResponseFormat`
+  Pydantic models, matching curriculum.md §16 exactly.
+- `errors.py` — the full 10-member `LLMError` taxonomy.
+- `base.py` — the `LLMRuntime` Protocol, `ensure_trace_id`, `MetricsHook`/
+  `NullMetricsHook`/`LoggingMetricsHook`, `Timer`, and `with_retries` (exponential backoff,
+  retryable-vs-not selection).
+- `fake.py` — `FakeRuntime`: canned/per-model responses, `fail_with` and
+  `fail_first_n_calls` failure injection (built specifically to test retry logic
+  deterministically), streaming, tokenize.
+- `ollama.py` — real adapter with precise httpx-exception-to-taxonomy mapping (connect vs.
+  read vs. pool timeout, finally resolving the gap flagged in Modules 4 and 5); `tokenize()`
+  correctly raises `FeatureNotSupported` rather than faking a count, pointing callers at
+  Module 1's `HFTokenizerCounter` instead.
+- `openai_compatible.py` — real adapter using the `openai` SDK for `generate`/`stream`, plus
+  a raw-httpx call to llama.cpp's native `/tokenize` endpoint.
+- `mlx.py` — real adapter bridging `mlx_lm`'s synchronous `stream_generate` to a genuine
+  async generator via a background thread + queue, with model-load caching.
+- `tests/test_runtime_contract.py` — the curriculum's explicit ask: one shared suite proving
+  all four adapters are interchangeable.
+- `notebooks/06_python_client_architecture.ipynb` — **executed end-to-end**, live-demonstrating
+  every adapter (not honest-skip stubs) since none of this module's core logic needs a real
+  runtime to verify.
+- `reports/module_06_python_client_architecture_report.md` — deliverable, including full
+  write-ups of two real bugs this module's own tests caught (below).
+- 167 new tests (165 passing + 2 correctly-skipped; 395 total in the repo, all passing);
+  `ruff check .` clean.
+
+**Two real bugs caught by this module's own tests:**
+1. The `openai` SDK retries transient errors internally by default; composed with this
+   module's own `with_retries()`, that would silently multiply retry attempts. Noticed
+   because the adapter's test file took an anomalous 3.01s (vs. ~0.1-0.3s for siblings) —
+   fixed by setting `max_retries=0` on every `AsyncOpenAI` client this module constructs, so
+   retry policy lives in exactly one place. Test runtime dropped to 0.72s.
+2. `test_runtime_contract.py`'s first version wrongly assumed every adapter rejects
+   `response_format.type="grammar"`. It failed immediately for `OpenAICompatibleRuntime` —
+   correctly, since real llama.cpp servers DO support grammar (per Module 5's
+   `feature_matrix.py`). Fixed by making per-adapter capability expectations explicit
+   instead of assumed-uniform.
+
+Deliberately not done in Module 6:
+- No real-server verification that `httpx.MockTransport`'s assumed response shapes match an
+  actual running Ollama/llama.cpp server byte-for-byte — machine constraint, narrower here
+  than prior modules since the adapter logic itself is fully verified; see the report's
+  "What this module's testing does and does not prove."
+- `ToolCallValidationError` and `SafetyPolicyViolation` are declared in the taxonomy but not
+  yet raised by any adapter — intentionally: they're Module 14's and Module 22's territory
+  respectively, declared now so the taxonomy is complete rather than extended piecemeal later.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -213,7 +274,7 @@ Deliberately not done in Module 5:
 | 3. Local model selection and benchmarking | [x] | [x] | [x] | [~] | harness fully built + proven against fakes; real 3-model run pending a resourced Mac |
 | 4. Quantization, context, memory math | [x] | [x] | [x] | [~] | formulas verified against every theory-doc number; real measurement pending a resourced Mac |
 | 5. Serving local models | [x] | [x] | [x] | [~] | feature matrix + all parsers built and tested; real per-runtime measurement pending a resourced Mac |
-| 6. Python client architecture | [ ] | [ ] | [ ] | [ ] | not started |
+| 6. Python client architecture | [x] | [x] | [x] | [x] | complete — canonical LLMRuntime abstraction built and fully verified via FakeRuntime + httpx.MockTransport, no honest-skip labs needed |
 
 ## Phase 1.5 — Serving/performance foundation
 

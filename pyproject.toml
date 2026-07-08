@@ -12,6 +12,7 @@ dependencies = [
     "pandas>=2.2",
     "rich>=13.9",
     "typer>=0.15",
+    "openai>=1.55",
 ]
 
 [dependency-groups]
@@ -24,7 +25,8 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "tests"]
-pythonpath = ["packages/local_ai_core", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05"]
+pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05"]
+asyncio_mode = "auto"
 
 [tool.ruff]
 line-length = 100
