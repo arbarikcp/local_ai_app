@@ -261,11 +261,28 @@ and reliability for local LLM apps once the basics are in place — see curricul
 
 ### Phase: Application primitives
 
-#### ⬜ Module 7 — Prompt engineering for small local models
+#### ✅ Module 7 — Prompt engineering for small local models
 
 Prompt design under weak-reasoning, limited-context, schema-reliability constraints: system
 message discipline, few-shot/negative examples, JSON-only prompting, prompt injection
-resistance, versioning, and regression tests. — curriculum.md §17
+resistance, versioning, and regression tests. Like Modules 6/6.5, fully built and verified
+without a live runtime — only the real 3-model comparison and real compression-quality
+tradeoff need one.
+
+- **Read:** [docs/modules/07_prompt_engineering_for_small_local_models.md](docs/modules/07_prompt_engineering_for_small_local_models.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/07_prompt_engineering.ipynb          # live-demonstrates everything, no installs needed
+  uv run python scripts/module_07/prompt_runner.py --models qwen2.5:1.5b qwen2.5:3b qwen2.5:7b   # needs Ollama
+  uv run python scripts/module_07/prompt_eval.py --model qwen2.5:1.5b                              # needs Ollama
+  uv run pytest packages/local_ai_core/prompts scripts/module_07 -q  # 81 tests, no runtime needed
+  ```
+- **Install needed:** nothing for the template/registry/injection-guard infrastructure or the
+  discipline-level comparison (proven against a fake model built to exhibit the real effect
+  being taught). Real model runs need Ollama (Module 2).
+- **Deliverable:** [reports/module_07_prompt_comparison.md](reports/module_07_prompt_comparison.md)
+  — includes an explicit honesty note that the compression-quality comparison needs a real
+  model to mean anything, and doesn't claim otherwise.
 
 #### ⬜ Module 8 — Structured output and extraction
 

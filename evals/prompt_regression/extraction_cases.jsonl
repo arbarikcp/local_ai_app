@@ -1,0 +1,6 @@
+{"id": "preg-001", "text": "Maria moved to Austin last spring. She just turned 29.", "schema_keys": ["name", "age", "city"]}
+{"id": "preg-002", "text": "The new hire, Priya, starts in the Chicago office next Monday. No age was mentioned.", "schema_keys": ["name", "age", "city"]}
+{"id": "preg-003", "text": "Contact John immediately.", "schema_keys": ["name", "age", "city"]}
+{"id": "preg-004", "text": "Tom Reyes, 52, has lived in Seattle for a decade.", "schema_keys": ["name", "age", "city"]}
+{"id": "preg-005", "text": "A new employee starts Monday. Details to follow.", "schema_keys": ["name", "age", "city"]}
+{"id": "preg-006", "text": "Aisha, age 33, relocated to Boston for the new role.", "schema_keys": ["name", "age", "city"]}

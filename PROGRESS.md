@@ -332,9 +332,77 @@ Deliberately not done in Module 6.5:
 | 6.5 Serving concurrency, batching, caching | complete — gateway infra (queue/cache/admission control) fully built and verified; real 1/2/4-concurrency measurement pending a resourced Mac |
 | 20. Inference optimization under 8–24GB | not started |
 
+## Module 7 detail (done 2026-07-08)
+
+Like Modules 6/6.5, the prompt infrastructure itself needed no honest-skip labs.
+
+Built:
+- `docs/modules/07_prompt_engineering_for_small_local_models.md` — theory chapter: why small
+  models need stricter prompts, system message discipline, few-shot/negative examples,
+  prompt compression, output constraints, injection resistance, versioning, and regression
+  tests, tying prompt structure to Module 6.5's prompt-prefix-reuse layout rule and
+  cache-invalidation requirement.
+- `packages/local_ai_core/prompts/template.py` — `PromptTemplate`, rendering the canonical
+  Role/Task/Input contract/Output contract/Rules/Examples/User input structure.
+- `few_shot.py` — `FewShotExample`/`NegativeExample` and formatting.
+- `registry.py` — `PromptRegistry`, versions immutable once registered.
+- `injection_guard.py` — `wrap_untrusted_input()` and a heuristic
+  `scan_for_injection_patterns()`, with an explicit test proving (not just claiming) its
+  real limit: a rephrased injection attempt is correctly NOT caught.
+- `scripts/module_07/prompt_variants.py` — 5 discipline-level variants of the same
+  extraction task, monotonically increasing in structure.
+- `prompt_runner.py` (Labs 2-3, reuses Module 3's `json_validity` scorer) and `prompt_eval.py`
+  (Labs 5-6: regression suite + compression comparison).
+- `evals/prompt_regression/extraction_cases.jsonl` — 6 frozen regression cases.
+- `notebooks/07_prompt_engineering.ipynb` — **executed end-to-end**; the discipline-level
+  comparison is genuinely discriminating (100% invalid JSON for vague/undisciplined
+  variants, 0% once rules/examples are present) against a fake model built to exhibit the
+  real effect Module 1 §11 documents.
+- `reports/module_07_prompt_comparison.md` — deliverable, including an explicit honesty note
+  about Lab 6 (below).
+- 81 new tests (562 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+**Honesty note, not a bug:** Lab 6's compression-vs-quality comparison ran successfully in
+the notebook (76% character reduction, both prompts scoring 100% pass rate) but this does
+NOT demonstrate compression is quality-free — it demonstrates the harness correctly measures
+character reduction and pass/fail, using a fake runtime that always returns valid output
+regardless of prompt content. A fake built to always succeed cannot honestly show a quality
+tradeoff it has no capacity to have. Documented explicitly in the report rather than implied
+as a real finding.
+
+Deliberately not done in Module 7:
+- No real 3-model comparison and no real compression-quality tradeoff — both need an actual
+  model whose behavior is sensitive to prompt content; machine constraint. Harness fully
+  built and unit-tested; completing this is running two commands on the resourced Mac.
+
+## Phase 1 — Foundation (Modules 1–6)
+
+| Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
+|---|---|---|---|---|---|
+| 1. Local LLM systems thinking | [x] | [x] | [x] | [~] | infra done; empirical labs pending a resourced Mac |
+| 2. Mac local AI dev environment | [x] | [x] | [x] | [~] | Lab 2.1 (dev tools) fully done; Labs 2.2-2.4 pending a resourced Mac |
+| 3. Local model selection and benchmarking | [x] | [x] | [x] | [~] | harness fully built + proven against fakes; real 3-model run pending a resourced Mac |
+| 4. Quantization, context, memory math | [x] | [x] | [x] | [~] | formulas verified against every theory-doc number; real measurement pending a resourced Mac |
+| 5. Serving local models | [x] | [x] | [x] | [~] | feature matrix + all parsers built and tested; real per-runtime measurement pending a resourced Mac |
+| 6. Python client architecture | [x] | [x] | [x] | [x] | complete — canonical LLMRuntime abstraction built and fully verified via FakeRuntime + httpx.MockTransport, no honest-skip labs needed |
+
+## Phase 1.5 — Serving/performance foundation
+
+| Module | Status |
+|---|---|
+| 6.5 Serving concurrency, batching, caching | complete — gateway infra (queue/cache/admission control) fully built and verified; real 1/2/4-concurrency measurement pending a resourced Mac |
+| 20. Inference optimization under 8–24GB | not started |
+
 ## Phase 2 — Application primitives (Modules 7–10, 8.5)
 
-All not started.
+| Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
+|---|---|---|---|---|---|
+| 7. Prompt engineering for small local models | [x] | [x] | [x] | [~] | prompt infra fully built + verified; real 3-model comparison and real compression-quality tradeoff pending a resourced Mac |
+| 8. Structured output and extraction | [ ] | [ ] | [ ] | [ ] | not started |
+| 8.5. Conversation and context management | [ ] | [ ] | [ ] | [ ] | not started |
+| 9. Embeddings from first principles | [ ] | [ ] | [ ] | [ ] | not started |
+| 10. Vector search and local vector databases | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 3 — RAG (Modules 11–13)
 
