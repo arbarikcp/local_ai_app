@@ -10,7 +10,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done
 - [x] `uv` project initialized (`pyproject.toml`, `.python-version`, `uv.lock`)
 - [x] `Makefile` with `sync`/`test`/`lint`/`fmt`/`notebook` targets
 - [x] `PROGRESS.md` tracker (this file)
-- [ ] `models/MODEL_CATALOG.md`
+- [x] `models/MODEL_CATALOG.md` (populated in Module 3)
 - [ ] `docs/architecture.md`, `docs/glossary.md`
 
 ## Module 1 detail (done 2026-07-08)
@@ -73,13 +73,52 @@ Deliberately not done in Module 2:
   oversight. `scripts/module_02/setup_mac.sh` documents the commands for the resourced Mac.
 - No `LLMRuntime` abstraction — still Module 6's job.
 
+## Module 3 detail (done 2026-07-08)
+
+Built:
+- `models/MODEL_CATALOG.md` — 13 candidate models (chat/code/embedding/reranker categories)
+  using curriculum's YAML schema (§6.4), each tagged `verification_status: documented`
+  (public model-card info only, none benchmarked here) with per-entry license caveats.
+- `docs/modules/03_local_model_selection_and_benchmarking.md` — theory chapter: model cards,
+  license checks, base-vs-instruct, chat templates, context length claims, quantized
+  variants, benchmark dimensions table, human-vs-automated eval, regression datasets.
+- `evals/golden_sets/{summarization,extraction,classification,code,rag,tool_calling}.jsonl`
+  — 36 frozen golden records total, 6 task types (exceeds the assessment's 5-task minimum).
+- `scripts/module_03/scorers/`: `exact_match.py`, `json_validity.py` (handles the
+  markdown-fence-wrapping failure mode from Module 1 §11), `rag_metrics.py` (simplified
+  precursor to Module 13's full RAG eval), `rubric_judge.py` (LLM-as-judge with an injected
+  judge function, built and tested but not yet wired into any golden set's scorer dispatch).
+- `scripts/module_03/run_benchmark.py` — orchestrator: loads a golden set, builds the
+  task-appropriate prompt, calls an injected `generate_fn`, scores via the right scorer, and
+  renders comparison/scorecard markdown tables. Real usage plugs in
+  `default_generate_fn` (Ollama via Module 1's `ollama_probe.py`); tests inject fakes.
+- `notebooks/03_model_benchmarking.ipynb` — **executed end-to-end**; ran the full harness
+  against two deliberately-imperfect fake models and got genuinely discriminating scores
+  (0.00-1.00 spread across tasks, not a rubber stamp), then correctly skipped the
+  real-Ollama section on this machine.
+- `reports/model_scorecard_TEMPLATE.md` (reusable blank template) and
+  `reports/module_03_local_model_selection_report.md` (this module's own deliverable,
+  including the fake-model proof table and the exact command to complete the real
+  3-model comparison on a resourced Mac).
+- 72 new unit tests (114 total in the repo now, all passing); `ruff check .` clean.
+
+Deliberately not done in Module 3:
+- No real 3-models-×-5-tasks benchmark run — machine constraint. Harness is fully built and
+  proven against fakes; `reports/module_03_local_model_selection_report.md` has the exact
+  command and says explicitly what's pending.
+- `rubric_judge.py` not wired into any golden set yet — none of the 6 task types currently
+  need an LLM-as-judge; will be used once an open-ended task is added.
+- No latency/memory/TTFT threading into scorecards yet — `ollama_probe.py` already captures
+  those; `run_benchmark.py` doesn't surface them in its tables yet. Noted as a gap, not
+  silently dropped.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 1. Local LLM systems thinking | [x] | [x] | [x] | [~] | infra done; empirical labs pending a resourced Mac |
 | 2. Mac local AI dev environment | [x] | [x] | [x] | [~] | Lab 2.1 (dev tools) fully done; Labs 2.2-2.4 pending a resourced Mac |
-| 3. Local model selection and benchmarking | [ ] | [ ] | [ ] | [ ] | not started |
+| 3. Local model selection and benchmarking | [x] | [x] | [x] | [~] | harness fully built + proven against fakes; real 3-model run pending a resourced Mac |
 | 4. Quantization, context, memory math | [ ] | [ ] | [ ] | [ ] | not started |
 | 5. Serving local models | [ ] | [ ] | [ ] | [ ] | not started |
 | 6. Python client architecture | [ ] | [ ] | [ ] | [ ] | not started |

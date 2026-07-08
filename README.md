@@ -133,16 +133,27 @@ smoke tests for all three runtimes (Ollama, llama-cpp-python server, MLX) so Mod
   — Lab 2.1 (dev tools) fully run here and found a real gap (`ripgrep` binary missing, only
   shadowed by a shell function); Labs 2.2–2.4 pending the resourced Mac.
 
-#### ⬜ Module 3 — Local model selection and benchmarking
+#### ✅ Module 3 — Local model selection and benchmarking
 
 Teaches model selection as a repeatable engineering process — reading model cards, license
-checks, and running a benchmark suite (latency, throughput, memory, quality, JSON validity)
-across candidate models — rather than picking "the best local model" once and hard-coding it.
+checks, and running a benchmark suite (6 task types: summarization, extraction,
+classification, code, RAG, tool calling) across candidate models — rather than picking "the
+best local model" once and hard-coding it.
 
-- **Read:** curriculum.md §13
-- **Run:** not yet built — will live at `model-eval-suite/runners/run_benchmark.py`
-- **Install needed:** the runtime(s) from Module 2, plus candidate models pulled
-- **Deliverable:** `reports/model_scorecard.md` (not yet built)
+- **Read:** [docs/modules/03_local_model_selection_and_benchmarking.md](docs/modules/03_local_model_selection_and_benchmarking.md),
+  [models/MODEL_CATALOG.md](models/MODEL_CATALOG.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/03_model_benchmarking.ipynb   # runs the harness against fake models, no installs needed
+  uv run python scripts/module_03/run_benchmark.py --models qwen2.5:1.5b qwen2.5:3b qwen2.5:7b   # needs Ollama + pulled models
+  uv run pytest scripts/module_03 -q                          # 72 tests, no runtime needed
+  ```
+- **Install needed:** nothing to build/test the harness itself. A real 3-model comparison
+  needs Ollama running with 3+ models pulled (see Module 2).
+- **Deliverable:** [reports/module_03_local_model_selection_report.md](reports/module_03_local_model_selection_report.md)
+  + [reports/model_scorecard_TEMPLATE.md](reports/model_scorecard_TEMPLATE.md) (reusable
+  template) — harness fully built and proven against fake models; real comparison pending a
+  resourced Mac.
 
 #### ⬜ Module 4 — Quantization, context, and memory math
 
