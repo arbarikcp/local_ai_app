@@ -508,10 +508,29 @@ immune by construction) on the identical task. — curriculum.md §25
   node), and a real adversarial-prompt break the workflow-graph replacement is immune to by
   construction, not by catching it after the fact.
 
-#### ⬜ Module 16 — MCP and local tool ecosystems
+#### ✅ Module 16 — MCP and local tool ecosystems
 
 MCP-style tool integration, and the MCP-vs-A2A distinction, without letting protocol
-enthusiasm substitute for architecture. — curriculum.md §26
+enthusiasm substitute for architecture. A real "MCP-like" server whose every `tools/call`
+routes through Module 14's `ToolExecutor` — the security boundary made structurally true, not
+just claimed. — curriculum.md §26
+
+- **Read:** [docs/modules/16_mcp_and_local_tool_ecosystems.md](docs/modules/16_mcp_and_local_tool_ecosystems.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/16_mcp_and_local_tool_ecosystems.ipynb   # real dispatch/security boundary, FakeRuntime for the final LLM step only
+  uv run python scripts/module_16/build_server_demo.py                  # runs for real, no installs needed
+  uv run python scripts/module_16/security_boundary_demo.py             # runs for real, no installs needed
+  uv run pytest packages/local_ai_agents scripts/module_16 -q           # 41 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — the server dispatcher, resources, prompts, and every security
+  mechanism (permissions, approval, sandboxing, audit logging, injection screening) are proven
+  with real (non-fake) results. Only "connect tool results to a local LLM" (Lab 6) needs
+  Ollama/another `LLMRuntime` adapter.
+- **Deliverable:** [reports/tool_ecosystem_security_notes.md](reports/tool_ecosystem_security_notes.md)
+  (curriculum's own named path) — includes a real demonstration that tool discovery is not
+  authorization, that tool descriptions are screened as prompt surface area, and that resources
+  are sandboxed at registration time, not just read time.
 
 #### ⬜ Module 17 — Local coding assistants
 

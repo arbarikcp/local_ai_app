@@ -816,6 +816,40 @@ Deliberately not done in Module 15:
 - Only one dangerous workflow node demonstrated — the mechanism is identical regardless of
   which tool triggers it, same scoping decision as Module 14.
 
+## Module 16 detail (done 2026-07-09)
+
+Deterministic Python end to end this module — the MCP-like server, resources, prompts, and
+every security mechanism it routes through all run for real. Only the final "connect tool
+results to a local LLM" step needs a live model.
+
+Built:
+- `docs/modules/16_mcp_and_local_tool_ecosystems.md` — theory chapter covering all 13 core
+  topics, the MCP teaching principle table (mapping each of MCP's non-removed requirements to
+  the real mechanism enforcing it), and the MCP-vs-A2A boundary.
+- `packages/local_ai_agents/tools/`: `mcp_resources.py` (`ResourceRegistry` - sandboxed at
+  *registration* time, not just read time), `mcp_prompts.py` (`PromptRegistry` - real template
+  rendering, real missing-argument errors), `mcp_like_server.py` (`McpLikeServer` - real
+  in-process dispatch for `tools/list`, `tools/call`, `resources/list`, `resources/read`,
+  `prompts/list`, `prompts/get`; every `tools/call` routes through Module 14's `ToolExecutor`,
+  never a handler directly; tool descriptions and resource content are screened with Module
+  13's `detect_prompt_injection_patterns()` before being exposed).
+- `scripts/module_16/`: `build_server_demo.py` (Labs 1-4, real file search + SQL tools, a real
+  Nimbus handbook resource, a real RAG-prompt exemplar), `security_boundary_demo.py` (Labs 5-6,
+  discovery-vs-authorization, dangerous-tool approval, a malicious tool description flagged,
+  real audit logging, and a real tool result fed into an LLM summary).
+- `notebooks/16_mcp_and_local_tool_ecosystems.ipynb` — **executed end-to-end**, every cell a
+  real measurement.
+- `reports/tool_ecosystem_security_notes.md` — curriculum's own named deliverable path, doubling
+  as this module's standard report.
+- 41 new tests (1386 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 16:
+- No JSON-RPC 2.0 transport or capability negotiation — this module proves the dispatch shape
+  and security properties MCP teaches, not protocol compliance.
+- No real LLM connecting to the server — pending the resourced 32GB Mac.
+- No A2A implementation — genuinely out of scope per curriculum's own framing.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -858,7 +892,7 @@ Deliberately not done in Module 15:
 |---|---|---|---|---|---|
 | 14. Tool calling and deterministic tool execution | [x] | [x] | [x] | [x] | complete — schema validation, registry, permissions, approval, budgets, and audit logging all fully verified with real (non-fake) proof; only LLM-proposed tool selection pending a resourced Mac |
 | 15. Agentic workflows without chaos | [x] | [x] | [x] | [x] | complete — safety budgets, loop prevention, workflow graph engine, checkpointing, and approval interrupts all fully verified with real (non-fake) proof, including a real reproduced adversarial-prompt failure; only ReAct reasoning and one workflow decision point pending a resourced Mac |
-| 16. MCP and local tool ecosystems | [ ] | [ ] | [ ] | [ ] | not started |
+| 16. MCP and local tool ecosystems | [x] | [x] | [x] | [x] | complete — MCP-like server, resources, prompts, and every security mechanism fully verified with real (non-fake) proof; only the final connect-to-LLM step pending a resourced Mac |
 | 17. Local coding assistants | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 5 — Advanced (Modules 18–19)
