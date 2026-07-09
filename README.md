@@ -482,10 +482,31 @@ logging, and budgets are all deterministic and run for real. — curriculum.md �
   absolute-path-override gotcha), two independent SQL defense layers proven separately, and a
   full permission → approval → budget → audit chain demonstrated end to end.
 
-#### ⬜ Module 15 — Agentic workflows without chaos
+#### ✅ Module 15 — Agentic workflows without chaos
 
 Agentic systems as controlled, inspectable workflows (not open-ended autonomy), with
-human-approval gates for risky steps. — curriculum.md §25
+human-approval gates for risky steps. Builds both the "avoid" shape (a ReAct loop, deliberately
+broken by a real adversarial prompt) and the "prefer" shape (a deterministic workflow graph,
+immune by construction) on the identical task. — curriculum.md §25
+
+- **Read:** [docs/modules/15_agentic_workflows_without_chaos.md](docs/modules/15_agentic_workflows_without_chaos.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/15_agentic_workflows_without_chaos.ipynb   # real safety/loop/checkpoint mechanisms, scripted runtimes for LLM turns
+  uv run python scripts/module_15/react_loop_demo.py                      # runs for real, no installs needed
+  uv run python scripts/module_15/workflow_graph_demo.py                  # runs for real, no installs needed
+  uv run python scripts/module_15/checkpoint_demo.py                      # runs for real, no installs needed
+  uv run python scripts/module_15/evaluate_task_success.py                # runs for real, no installs needed
+  uv run pytest packages/local_ai_agents scripts/module_15 -q             # 73 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — safety budgets, loop prevention, the workflow graph engine,
+  checkpointing/resume, and approval interrupts are all proven with real (non-fake) results,
+  including a genuinely reproduced adversarial-prompt failure. Only the ReAct loop's reasoning
+  and one bounded workflow decision point need Ollama/another `LLMRuntime` adapter.
+- **Deliverable:** [reports/module_15_agentic_workflows_report.md](reports/module_15_agentic_workflows_report.md)
+  — includes a real bug found and fixed (checkpoint resume was re-running the just-completed
+  node), and a real adversarial-prompt break the workflow-graph replacement is immune to by
+  construction, not by catching it after the fact.
 
 #### ⬜ Module 16 — MCP and local tool ecosystems
 

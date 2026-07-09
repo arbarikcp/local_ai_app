@@ -770,6 +770,52 @@ Deliberately not done in Module 14:
   `UnsafeQueryError`) as a separately-typed exception — captured in `ToolResult.error_message`
   and the audit log either way, just not separately catchable by a caller.
 
+## Module 15 detail (done 2026-07-09)
+
+Every planning/execution mechanism is deterministic Python and runs for real this module —
+safety budgets, loop prevention, the workflow graph engine, checkpointing, and human approval
+interrupts. Only two LLM-dependent pieces (ReAct's reasoning, one bounded workflow decision
+point) are scripted-runtime-backed.
+
+Built:
+- `docs/modules/15_agentic_workflows_without_chaos.md` — theory chapter covering all 12 core
+  topics, the preferred mental model, and the agent safety budget's exact YAML shape.
+- `packages/local_ai_agents/planners/`: `safety_budget.py` (`AgentSafetyBudget` - real step/
+  tool-call/token counters, real wall-clock runtime), `memory.py` (`AgentMemory` - single-run
+  step history), `loop_prevention.py` (`LoopGuard` - a real circuit breaker on repeated
+  identical tool calls), `react_loop.py` (`ReActLoop` - the "avoid" shape), `workflow_graph.py`
+  (`WorkflowGraph` - one engine for both "state machine" and "graph-based" agent topics, since
+  a state machine is a graph with unambiguous branches), `checkpoint_store.py`
+  (`CheckpointStore` - real SQLite persistence, same pattern as Module 8.5's `SessionStore`).
+- `packages/local_ai_agents/executors/workflow_executor.py` (`WorkflowExecutor`) - runs a
+  `WorkflowGraph`: safety budget per step, approval gating for dangerous nodes (Module 14's
+  `ApprovalGate`, same fail-closed default), bounded retry-then-fail, and checkpoint-after-every-
+  step so a run resumes correctly after an actual restart.
+- `scripts/module_15/`: `react_loop_demo.py` (Labs 1-2, includes a real adversarial-prompt
+  break), `workflow_graph_demo.py` (Labs 3-4, the same task immune by construction, plus a real
+  approval interrupt), `checkpoint_demo.py` (Lab 5), `evaluate_task_success.py` (Lab 6, includes
+  a deliberately wrong golden case to prove the scorer discriminates).
+- `notebooks/15_agentic_workflows_without_chaos.ipynb` — **executed end-to-end**, every cell a
+  real measurement.
+- `reports/module_15_agentic_workflows_report.md` — deliverable, including a real checkpoint-
+  resume bug found and fixed (see below).
+- 73 new tests (1345 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Real bug found and fixed while building this module: `WorkflowExecutor` originally checkpointed
+the node that had *just completed* as the resume point, so resuming re-ran that already-finished
+node a second time instead of continuing forward. Caught by a resume test expecting a counter of
+2 (1 before a simulated restart, 1 after) that got 3 instead. Fixed by checkpointing the *next*
+node computed from the graph's edges, not the one that just finished.
+
+Deliberately not done in Module 15:
+- No real LLM driving ReAct's reasoning or the workflow graph's one decision point — pending
+  the resourced 32GB Mac.
+- Cross-run/long-term agent memory — `AgentMemory` is explicitly scoped to a single run;
+  persistent memory is RAG-backed (Module 11) or conversation memory (Module 8.5).
+- Only one dangerous workflow node demonstrated — the mechanism is identical regardless of
+  which tool triggers it, same scoping decision as Module 14.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -811,7 +857,7 @@ Deliberately not done in Module 14:
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 14. Tool calling and deterministic tool execution | [x] | [x] | [x] | [x] | complete — schema validation, registry, permissions, approval, budgets, and audit logging all fully verified with real (non-fake) proof; only LLM-proposed tool selection pending a resourced Mac |
-| 15. Agentic workflows without chaos | [ ] | [ ] | [ ] | [ ] | not started |
+| 15. Agentic workflows without chaos | [x] | [x] | [x] | [x] | complete — safety budgets, loop prevention, workflow graph engine, checkpointing, and approval interrupts all fully verified with real (non-fake) proof, including a real reproduced adversarial-prompt failure; only ReAct reasoning and one workflow decision point pending a resourced Mac |
 | 16. MCP and local tool ecosystems | [ ] | [ ] | [ ] | [ ] | not started |
 | 17. Local coding assistants | [ ] | [ ] | [ ] | [ ] | not started |
 
