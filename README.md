@@ -329,11 +329,30 @@ real SQLite persistence and real budget/truncation math need no live model.
   — includes a real early-fact-retention comparison (drop_oldest loses it, summarization
   retains it) and real SQLite restart-persistence proof.
 
-#### ⬜ Module 9 — Embeddings from first principles
+#### ✅ Module 9 — Embeddings from first principles
 
 Embeddings from scratch (normalize → cosine similarity → top-k) before any framework,
 including embedding-serving reality (sentence-transformers vs. Ollama endpoints) and
-Matryoshka-style dimension truncation. — curriculum.md §19
+Matryoshka-style dimension truncation. Almost no honest-skip surface — `FakeEmbedder` is a
+genuine bag-of-words hashing embedder, so retrieval, evaluation, and comparison numbers are
+all real, not fabricated. — curriculum.md §19
+
+- **Read:** [docs/modules/09_embeddings_from_first_principles.md](docs/modules/09_embeddings_from_first_principles.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/09_embeddings_from_first_principles.ipynb   # real retrieval, evaluation, and comparison, no installs needed
+  uv run python scripts/module_09/generate_and_search.py                   # runs for real, no installs needed
+  uv run python scripts/module_09/compare_embedding_models.py              # runs for real, no installs needed
+  uv run pytest packages/local_ai_rag/embeddings scripts/module_09 -q      # 91 tests, no runtime needed
+  ```
+- **Install needed:** nothing — normalization, cosine similarity, Matryoshka truncation,
+  brute-force search, metadata filtering, and the full recall@k/precision@k/MRR/nDCG@k/latency/
+  throughput eval suite are all proven with real (non-fake) results. `OllamaEmbedder` and
+  `SentenceTransformersEmbedder` are built and unit-tested but need Ollama or a downloaded
+  sentence-transformers model to run for real.
+- **Deliverable:** [reports/module_09_embedding_model_report.md](reports/module_09_embedding_model_report.md)
+  — includes a real dimensionality-vs-ranking-quality comparison (64d vs. 4d hash collisions
+  degrade MRR/nDCG while recall@k stays unaffected) and real throughput timing.
 
 #### ⬜ Module 10 — Vector search and local vector databases
 

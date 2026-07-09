@@ -471,6 +471,47 @@ Deliberately not done in Module 8.5:
 - No real chat-template rendering — `chat_loop.py`'s `render_history()` is an explicitly
   labeled simple stand-in; a real adapter (Module 6) owns actual template rendering.
 
+## Module 9 detail (done 2026-07-09)
+
+Almost no honest-skip surface this module — `FakeEmbedder` is a genuine bag-of-words hashing
+embedder, so normalization, cosine similarity, Matryoshka truncation, brute-force search,
+metadata filtering, and the full evaluation suite are all proven with real (non-fake) numbers.
+
+Built:
+- `docs/modules/09_embeddings_from_first_principles.md` — theory chapter covering embedding
+  fundamentals, embedding-serving reality (sentence-transformers vs. Ollama), Matryoshka
+  truncation, from-scratch implementation, and evaluation, plus an explicit repo-structure
+  note reconciling curriculum.md §19's literal path with §8's canonical structure.
+- `packages/local_ai_rag/embeddings/`: `embedder.py` (`Embedder` protocol, `normalize()`,
+  `cosine_similarity()`, `truncate_embedding()`, `NumpyEmbeddingIndex` brute-force search with
+  metadata filtering), `fake.py` (`FakeEmbedder` — SHA-256 feature-hashing bag-of-words
+  embedder, a real if crude technique), `ollama_embedder.py` (`OllamaEmbedder`, reuses Module
+  6's `LLMError` taxonomy via `map_httpx_error`), `sentence_transformers_embedder.py`
+  (`SentenceTransformersEmbedder`, lazy-import + injected `load_fn`/`encode_fn`, same DI
+  pattern as Module 6's `MLXRuntime`), `eval.py` (`recall_at_k`, `precision_at_k`,
+  `reciprocal_rank`, `ndcg_at_k`, `evaluate_embedder()`, `measure_embedding_throughput()`).
+- `scripts/module_09/`: `generate_and_search.py` (Labs 1-4, 6: build a 5-document corpus,
+  index it, brute-force search, evaluate recall@k, metadata-filter), `compare_embedding_models.py`
+  (Lab 5: compares two `FakeEmbedder` dimensionalities as an honest stand-in for two real
+  models, since this machine can't run two real distinct embedders).
+- `notebooks/09_embeddings_from_first_principles.ipynb` — **executed end-to-end**, every cell
+  showing real computed results: word-overlap similarity, corpus search, metadata filtering,
+  full eval metrics, a real dimensionality-vs-ranking-quality comparison, and real throughput
+  timing.
+- `reports/module_09_embedding_model_report.md` — deliverable, including the real 64d-vs-4d
+  comparison showing MRR/nDCG degrade under hash collisions while recall@k stays unaffected.
+- 91 new tests (841 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 9:
+- No real neural embedding model run — `OllamaEmbedder` and `SentenceTransformersEmbedder` are
+  built and fully unit-tested (against `httpx.MockTransport` and injected fake `load_fn`/
+  `encode_fn` respectively) but need a running Ollama server or a downloaded
+  sentence-transformers model; machine constraint, pending the resourced 32GB Mac.
+- `compare_embedding_models.py` compares two `FakeEmbedder` configurations, not two real
+  models — documented explicitly as an honest stand-in rather than silently passed off as a
+  real model comparison.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -496,7 +537,7 @@ Deliberately not done in Module 8.5:
 | 7. Prompt engineering for small local models | [x] | [x] | [x] | [~] | prompt infra fully built + verified; real 3-model comparison and real compression-quality tradeoff pending a resourced Mac |
 | 8. Structured output and extraction | [x] | [x] | [x] | [~] | full reliability-ladder pipeline built + verified via FakeRuntime; real 3-model/3-mode comparison pending a resourced Mac |
 | 8.5. Conversation and context management | [x] | [x] | [x] | [x] | complete — SQLite persistence, budget/truncation/summarization all fully verified with real (non-fake) proof; only real recall measurement (Lab 5) pending a resourced Mac |
-| 9. Embeddings from first principles | [ ] | [ ] | [ ] | [ ] | not started |
+| 9. Embeddings from first principles | [x] | [x] | [x] | [x] | complete — normalize/cosine/truncation/search/eval all fully verified with real (non-fake) proof; only a real neural embedding model run pending a resourced Mac |
 | 10. Vector search and local vector databases | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 3 — RAG (Modules 11–13)
