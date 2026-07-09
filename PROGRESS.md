@@ -559,6 +559,54 @@ Deliberately not done in Module 10:
   search; a larger-scale benchmark is the natural next step.
 - Reranking and context packing are Module 12's subject, not implemented here.
 
+## Module 11 detail (done 2026-07-09)
+
+Every stage through prompt assembly runs for real this module against a genuine 20-file
+markdown corpus (`datasets/rag_docs/nimbus_handbook/`) — only answer generation needs a live
+LLM runtime, wired via Module 6's `LLMRuntime` protocol and fully exercised with `FakeRuntime`.
+
+Built:
+- `datasets/rag_docs/nimbus_handbook/` — 20 markdown files, a fictional cloud-storage
+  handbook (account management, billing, file sharing, sync clients, API docs, security) with
+  internally consistent, uniquely-stated facts, used as real retrieval ground truth.
+- `docs/modules/11_rag_v1_naive_rag.md` — theory chapter covering the naive RAG architecture,
+  document loading, chunking, retrieval, prompt assembly, basic citations, and the
+  curriculum's own gotchas made measurable rather than just documented.
+- `packages/local_ai_rag/`: `loaders/markdown_loader.py` (doc-id-from-filename, title/body
+  split), `chunkers/document_chunker.py` (wraps Module 8's `chunk_text()`, adds stable
+  `chunk_id = f"{doc_id}::{index}"` citation keys), `retrievers/naive_retriever.py`
+  (embed-then-search, no reranking/hybrid by design), `context_packers/citation_packer.py`
+  (curriculum's minimal RAG prompt verbatim, citation-marker extraction), `pipeline.py`
+  (`NaiveRagPipeline` — full ingest/retrieve/answer flow, `RagAnswer.citations_are_grounded`
+  detects invented citations by cross-checking against actually-retrieved chunk ids).
+- `scripts/module_11/`: `build_and_query.py` (Labs 1-2), `qa_eval.py` (Labs 3-4: 8 answerable
+  + 4 unanswerable hand-labeled golden questions, doc-level recall/precision/MRR/nDCG reusing
+  Module 9's `eval.py`), `compare_chunk_sizes.py` (Lab 5: same golden set across 3 chunk
+  sizes).
+- `notebooks/11_rag_v1_naive_rag.ipynb` — **executed end-to-end**, every cell a real
+  measurement, including a deliberately provoked invented-citation detection demo.
+- `reports/module_11_naive_rag_report.md` — deliverable, including the real (imperfect,
+  honest) 0.62 recall@3 number and the real chunk-size-vs-quality comparison.
+- 49 new tests (952 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Real proof, not assumed: chunking too aggressively (150 chars) measurably hurts retrieval —
+recall@3 drops from 0.62 (at 500 chars) to 0.38, MRR from 0.62 to 0.29. Unanswerable questions
+score noticeably lower (0.39-0.51 top score) than answerable ones typically do, a real signal
+the retriever isn't confidently wrong on out-of-corpus questions.
+
+Deliberately not done in Module 11:
+- No real model's generated answer, and no real-model observation of "the model may ignore
+  context" or "the model may answer from prior knowledge" — both need a live LLM to be
+  meaningful; pending the resourced 32GB Mac.
+- No context-budget enforcement — naive RAG packs all top-k chunks into the prompt regardless
+  of size by definition; Module 8.5's budget machinery isn't re-applied here.
+- No reranking, hybrid search, or query rewriting in `NaiveRetriever` — Module 10's
+  `hybrid_search()` exists and is proven, but naive RAG deliberately doesn't call it; that
+  upgrade is explicitly Module 12's subject.
+- Text cleaning is minimal (title/body split only) — real-world document parsing (PDFs,
+  HTML, OCR) is Module 12's "deeper document parsing."
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -589,7 +637,11 @@ Deliberately not done in Module 10:
 
 ## Phase 3 — RAG (Modules 11–13)
 
-All not started.
+| Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
+|---|---|---|---|---|---|
+| 11. RAG v1: naive RAG | [x] | [x] | [x] | [x] | complete — loading/chunking/embedding/retrieval/prompt-assembly/citations all fully verified with real (non-fake) proof against a genuine 20-file corpus; only real answer generation pending a resourced Mac |
+| 12. RAG v2: production retrieval | [ ] | [ ] | [ ] | [ ] | not started |
+| 13. RAG v3: evaluation, citations, and guardrails | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 4 — Agents/tools (Modules 14–17)
 

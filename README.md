@@ -379,11 +379,29 @@ runtimes, so both are installed and every lab runs for real. — curriculum.md �
 
 ### Phase: RAG
 
-#### ⬜ Module 11 — RAG v1: naive RAG
+#### ✅ Module 11 — RAG v1: naive RAG
 
 Chunk → embed → store → retrieve → prompt → answer, built from scratch, plus the standard
 naive-RAG failure modes (bad chunking, irrelevant top-k, ignored context, invented
-citations). — curriculum.md §21
+citations). Every stage through prompt assembly runs for real against a genuine 20-file
+markdown corpus; only answer generation needs a live LLM runtime. — curriculum.md §21
+
+- **Read:** [docs/modules/11_rag_v1_naive_rag.md](docs/modules/11_rag_v1_naive_rag.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/11_rag_v1_naive_rag.ipynb        # real ingest/retrieve/cite, FakeRuntime for generation
+  uv run python scripts/module_11/build_and_query.py             # runs for real, no installs needed
+  uv run python scripts/module_11/qa_eval.py                     # runs for real, no installs needed
+  uv run python scripts/module_11/compare_chunk_sizes.py         # runs for real, no installs needed
+  uv run pytest packages/local_ai_rag scripts/module_11 -q       # 49 new tests, no runtime needed
+  ```
+- **Install needed:** nothing for loading, chunking, embedding, storage, retrieval, or prompt
+  assembly/citation-grounding — all proven with real (non-fake) results against
+  `datasets/rag_docs/nimbus_handbook/`. Real answer generation needs Ollama or another
+  `LLMRuntime` adapter (Module 6) on the resourced Mac.
+- **Deliverable:** [reports/module_11_naive_rag_report.md](reports/module_11_naive_rag_report.md)
+  — includes real (imperfect, honest) recall/precision/MRR/nDCG numbers, a real
+  invented-citation detection demo, and a real chunk-size-vs-retrieval-quality comparison.
 
 #### ⬜ Module 12 — RAG v2: production retrieval
 
