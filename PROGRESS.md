@@ -956,6 +956,47 @@ Deliberately not done in Module 18:
   separately implemented; both would route through the same proven `should_use_vlm()` →
   `FakeVLM` path already demonstrated for receipts and screenshots.
 
+## Module 19 detail (done 2026-07-10)
+
+Almost the entire module runs for real — the decision framework, dataset creation/cleaning/
+splitting/leakage detection, LoRA parameter-count math, overfitting detection, and the adapter
+registry are all deterministic stdlib Python. Only real LoRA training/merging is honest-skip
+(needs base model weights and Apple Silicon compute this machine doesn't have).
+
+Built:
+- `datasets/finetuning/ticket_classification.jsonl` — real, committed, hand-labeled
+  instruction-tuning dataset (40 examples, 4 categories, 10 each), continuing the recurring
+  Nimbus Cloud Storage support-ticket theme (Modules 13, 15-17).
+- `docs/modules/19_finetuning_lora_and_adapters.md` — theory chapter covering all 13 core
+  topics, with an explicit Machine note on why real LoRA training is out of scope here and how
+  `mlx_lora.py` is designed to be enabled for real on a resourced Mac.
+- `packages/local_ai_core/finetuning/`: `decision_framework.py` (`recommend_approach()` — the
+  prompting/RAG/fine-tuning decision diagram as one real, testable function), `dataset.py`
+  (`TrainingExample`, `clean_dataset()`, `split_dataset()`, `detect_leakage()`), `lora_math.py`
+  (real parameter-count formulas, a genuine reduction on realistic layer shapes), `overfitting.py`
+  (`detect_overfitting()` — the standard patience-based early-stopping signal), `adapter_registry.py`
+  (`AdapterRegistry` — real SQLite persistence, same pattern as Module 8.5's `SessionStore`),
+  `mlx_lora.py` (`MlxLoraTrainer` — DI-injected subprocess wrapper over `mlx_lm.lora`/
+  `mlx_lm.fuse`, same lazy-import/DI pattern as Module 6's `MLXRuntime`), `evaluation.py`
+  (`compare_before_after()` — reuses Module 13's `must_contain_score`).
+- `scripts/module_19/`: `dataset_demo.py` (Lab 1), `evaluation_demo.py` (Labs 3-4),
+  `adapter_packaging_demo.py` (Labs 5-6).
+- `notebooks/19_finetuning_lora_and_adapters.ipynb` — **executed end-to-end**, every cell a real
+  computation.
+- `reports/module_19_finetuning_report.md` — deliverable, including a genuine LoRA parameter
+  reduction (1.41% of full fine-tuning's trainable parameters) and a real overfitting detector
+  correctly distinguishing a genuine overfit from noisy-but-plateaued training.
+- 62 new tests (1576 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 19:
+- Real LoRA training or adapter merging — `mlx_lora.py` is fully built with the lazy-import/DI
+  pattern; pending the resourced 32GB Mac.
+- QLoRA as code — theory only; it's genuinely the composition of Module 4's quantization math
+  and this module's LoRA math, not a third thing to separately implement.
+- A real training run to produce the overfitting loss curve — synthetic-but-realistic, labeled
+  as such everywhere it appears.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1006,7 +1047,7 @@ Deliberately not done in Module 18:
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 18. Multimodal local applications | [x] | [x] | [x] | [x] | complete — real PDF rendering/table extraction/image preprocessing/routing all fully verified with real (non-fake) proof; only real VLM inference pending a resourced Mac |
-| 19. Fine-tuning, LoRA, and adapters on Mac | [ ] | [ ] | [ ] | [ ] | not started |
+| 19. Fine-tuning, LoRA, and adapters on Mac | [x] | [x] | [x] | [x] | complete — decision framework, dataset tooling, LoRA math, overfitting detection, and adapter registry all fully verified with real (non-fake) proof; only real LoRA training/merging pending a resourced Mac |
 
 ## Phase 6 — Production (Modules 21–23)
 

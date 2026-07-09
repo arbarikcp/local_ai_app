@@ -583,10 +583,32 @@ curriculum.md §28
   window) and a real citation-regex bug found and fixed when page-qualified PDF doc_ids
   introduced a second `"::"` separator.
 
-#### ⬜ Module 19 — Fine-tuning, LoRA, and adapters on Mac
+#### ✅ Module 19 — Fine-tuning, LoRA, and adapters on Mac
 
-When and how to customize a local model (LoRA/adapters) instead of reaching for a bigger
-model. — curriculum.md §29
+When and how to customize a local model (LoRA/adapters) instead of reaching for a bigger model.
+A real, testable decision framework; a real 40-example hand-labeled dataset with real
+cleaning/splitting/leakage detection; real LoRA parameter-count math; a real overfitting
+detector; a real SQLite adapter registry; a real before/after evaluation harness. Only actual
+LoRA training/merging is honest-skipped (needs base model weights this machine doesn't have). —
+curriculum.md §29
+
+- **Read:** [docs/modules/19_finetuning_lora_and_adapters.md](docs/modules/19_finetuning_lora_and_adapters.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/19_finetuning_lora_and_adapters.ipynb   # real math/dataset/eval work, honest-skip for actual training
+  uv run python scripts/module_19/dataset_demo.py                     # runs for real, no installs needed
+  uv run python scripts/module_19/evaluation_demo.py                  # runs for real, no installs needed
+  uv run python scripts/module_19/adapter_packaging_demo.py           # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/finetuning scripts/module_19 -q   # 62 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — the decision framework, dataset tooling, LoRA math, overfitting
+  detector, and adapter registry are all stdlib Python. Only real LoRA training/merging needs
+  `mlx-lm` (commented out in `pyproject.toml`, already the entry from Module 6) plus a
+  downloaded model on the resourced Mac.
+- **Deliverable:** [reports/module_19_finetuning_report.md](reports/module_19_finetuning_report.md)
+  — includes a genuine LoRA parameter reduction (1.41% of full fine-tuning's trainable
+  parameters for a realistic Qwen2.5-1.5B attention-layer shape) and a real overfitting
+  detector correctly distinguishing a genuine overfit from noisy-but-plateaued training.
 
 ### Phase: Production
 
