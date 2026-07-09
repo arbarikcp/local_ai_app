@@ -16,7 +16,6 @@ dependencies = [
     "chromadb>=1.5.9",
     "onnxruntime<1.20",
     "lancedb>=0.34.0",
-
     # --- Heavy/optional deps for real model adapters, intentionally NOT installed here ---
     # This dev machine has no LLM runtime or model weights installed on purpose (limited
     # disk/memory - see memory/project_dev_machine_constraints.md). The adapters below already
@@ -30,6 +29,14 @@ dependencies = [
     #                                 # packages/local_ai_rag/embeddings/sentence_transformers_embedder.py,
     #                                 # packages/local_ai_rag/rerankers/cross_encoder_reranker.py
     # "transformers>=4.46",          # HFTokenizerCounter - scripts/module_01/token_estimate.py
+    # "mlx-vlm>=0.1",                # a real VisionLanguageModel adapter -
+    #                                 # packages/local_ai_core/multimodal/vlm.py
+    #
+    # pymupdf/pdfplumber/pillow are real libraries, not LLM runtimes or model weights (same
+    # reasoning as Module 10's chromadb/lancedb) - installed and used for real.
+    "pymupdf>=1.28.0",
+    "pdfplumber>=0.11.10",
+    "pillow>=12.3.0",
 ]
 
 [dependency-groups]
@@ -42,7 +49,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "tests"]
-pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17"]
+pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17", "scripts/module_18"]
 asyncio_mode = "auto"
 
 [tool.ruff]

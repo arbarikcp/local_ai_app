@@ -55,6 +55,12 @@ class TestExtractCitations:
     def test_ignores_bracketed_text_that_is_not_chunk_id_shaped(self):
         assert extract_citations("See [not a citation] for details.") == []
 
+    def test_finds_a_citation_with_multiple_colon_separated_segments(self):
+        # Module 18's PDF-page doc_ids (pdf_stem::pageN) add a second "::"
+        # before the chunk index - a real bug this exact case caught.
+        text = "The invoice number is [sample_invoice::page1::0]."
+        assert extract_citations(text) == ["sample_invoice::page1::0"]
+
 
 class TestSummarizeSourceCitations:
     def test_reduces_chunk_citations_to_unique_doc_ids(self):
@@ -67,3 +73,10 @@ class TestSummarizeSourceCitations:
 
     def test_empty_input_returns_empty_list(self):
         assert summarize_source_citations([]) == []
+
+    def test_a_pdf_page_source_keeps_its_page_segment(self):
+        # rsplit, not split - only the trailing "::chunk_index" is
+        # stripped, so a page-qualified doc_id doesn't collapse to just
+        # the PDF's stem and lose which page the citation came from.
+        result = summarize_source_citations(["sample_invoice::page1::0", "sample_invoice::page2::0"])
+        assert result == ["sample_invoice::page1", "sample_invoice::page2"]

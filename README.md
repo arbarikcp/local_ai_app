@@ -557,10 +557,31 @@ pytest run (1 failed → 7 passed). — curriculum.md §27
 
 ### Phase: Advanced
 
-#### ⬜ Module 18 — Multimodal local applications
+#### ✅ Module 18 — Multimodal local applications
 
 Local apps over images, screenshots, scanned PDFs, diagrams, and tables — OCR/layout parsing
-plus optional local VLM analysis. — curriculum.md §28
+plus optional local VLM analysis. Real PDF rendering/table extraction/image preprocessing
+(PyMuPDF, pdfplumber, Pillow) over two real fixtures — one digital-native, one genuinely
+text-free — with `should_use_vlm()` routing each to the correct path automatically. —
+curriculum.md §28
+
+- **Read:** [docs/modules/18_multimodal_local_applications.md](docs/modules/18_multimodal_local_applications.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/18_multimodal_local_applications.ipynb   # real extraction/routing/RAG, FakeVLM for visual reasoning only
+  uv run python scripts/module_18/pdf_extraction_demo.py                 # runs for real, no installs needed
+  uv run python scripts/module_18/vlm_routing_demo.py                    # runs for real, no installs needed
+  uv run python scripts/module_18/multimodal_rag_demo.py                 # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/multimodal packages/local_ai_rag scripts/module_18 -q   # 70 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — `pymupdf`, `pdfplumber`, and `pillow` are already installed
+  (real libraries, not LLM runtimes, same reasoning as Module 10's `chromadb`/`lancedb`). Only
+  real VLM inference needs `mlx-vlm` (commented out in `pyproject.toml`) plus a downloaded
+  model on the resourced Mac.
+- **Deliverable:** [reports/module_18_multimodal_report.md](reports/module_18_multimodal_report.md)
+  — includes a real memory-cost overflow (a 2048×2048 image exceeding an 8000-token context
+  window) and a real citation-regex bug found and fixed when page-qualified PDF doc_ids
+  introduced a second `"::"` separator.
 
 #### ⬜ Module 19 — Fine-tuning, LoRA, and adapters on Mac
 
