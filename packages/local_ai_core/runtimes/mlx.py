@@ -10,6 +10,16 @@ load/generate/stream_generate are injected via constructor - the same
 dependency-injection principle as every adapter in this module - so tests
 substitute fakes without needing MLX installed or Apple Silicon (this
 repo's machine constraint: no model runtime installed here at all).
+
+Enabling this for real (on Apple Silicon):
+    1. In pyproject.toml, uncomment `"mlx-lm>=0.19"`, then run `uv sync`.
+    2. Pick a model from mlx-community on Hugging Face, e.g.
+       `mlx-community/Qwen2.5-1.5B-Instruct-4bit`. No separate download step -
+       `mlx_lm.load(model_id)` downloads and caches it on first use.
+    3. Construct with no overrides: `MLXRuntime(model_id)` - `load_fn`,
+       `generate_fn`, `stream_generate_fn` already default to the real
+       `mlx_lm` functions (`_real_load`, `_real_generate`,
+       `_real_stream_generate` below); only tests inject fakes.
 """
 
 from __future__ import annotations

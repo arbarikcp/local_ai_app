@@ -68,6 +68,16 @@ class HFTokenizerCounter:
     Loaded lazily so that importing this module never requires
     ``transformers`` to be installed — only labs that explicitly need exact
     pre-flight counts pay that cost.
+
+    Enabling this for real:
+        1. In pyproject.toml, uncomment ``"transformers>=4.46"``, then run ``uv sync``.
+        2. Pick a model id whose tokenizer is public on Hugging Face, e.g.
+           ``"Qwen/Qwen2.5-1.5B-Instruct"`` — no separate download step,
+           ``AutoTokenizer.from_pretrained(model_id)`` downloads and caches it on
+           first use.
+        3. Construct with no changes: ``HFTokenizerCounter(model_id)`` — the
+           ``transformers`` import already lives inside ``_ensure_loaded()``; it
+           only raises ``TokenizerUnavailable`` when the package isn't installed.
     """
 
     def __init__(self, model_id: str) -> None:

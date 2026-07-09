@@ -16,6 +16,20 @@ dependencies = [
     "chromadb>=1.5.9",
     "onnxruntime<1.20",
     "lancedb>=0.34.0",
+
+    # --- Heavy/optional deps for real model adapters, intentionally NOT installed here ---
+    # This dev machine has no LLM runtime or model weights installed on purpose (limited
+    # disk/memory - see memory/project_dev_machine_constraints.md). The adapters below already
+    # lazy-import these inside function bodies and are fully unit-tested via injected fakes;
+    # installing the package is only needed to run them for real on a resourced machine.
+    #
+    # To enable one: uncomment its line, run `uv sync`, then follow the "Enabling this for
+    # real" section in the docstring of the file listed next to it.
+    # "mlx-lm>=0.19",                # MLXRuntime - packages/local_ai_core/runtimes/mlx.py
+    # "sentence-transformers>=3.0",  # SentenceTransformersEmbedder, CrossEncoderReranker -
+    #                                 # packages/local_ai_rag/embeddings/sentence_transformers_embedder.py,
+    #                                 # packages/local_ai_rag/rerankers/cross_encoder_reranker.py
+    # "transformers>=4.46",          # HFTokenizerCounter - scripts/module_01/token_estimate.py
 ]
 
 [dependency-groups]

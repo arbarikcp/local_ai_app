@@ -7,6 +7,14 @@ local_ai_core is the expected direction - the reverse, and the
 packages-depending-on-scripts direction Module 8 flagged, are not).
 Tested via httpx.MockTransport, same pattern as Module 6's OllamaRuntime -
 never touches a real server here.
+
+Enabling this for real (no pip package needed - same reasoning as
+OllamaRuntime, this only talks to Ollama over HTTP via `httpx`):
+    1. `brew install ollama`, then `ollama serve` (or launch the Ollama app).
+    2. Pull an embedding model, e.g. `ollama pull nomic-embed-text`.
+    3. Construct with no fakes: `OllamaEmbedder("nomic-embed-text")` - the
+       default `client=None` opens a real `httpx.AsyncClient`; only tests
+       pass a `client=httpx.AsyncClient(transport=httpx.MockTransport(...))`.
 """
 
 from __future__ import annotations

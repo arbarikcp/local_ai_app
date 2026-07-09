@@ -12,6 +12,17 @@ pure and unit-tested directly; generate()/stream()/tokenize() are thin
 wrappers tested with httpx.MockTransport (see tests/test_ollama_runtime.py
 and the theory doc's "Testing strategy" section for what that does and
 does not prove).
+
+Enabling this for real (no pip package needed - Ollama is a standalone
+server, and this adapter only talks to it over HTTP via `httpx`, already a
+project dependency):
+    1. `brew install ollama`, then `ollama serve` (or launch the Ollama app)
+       to start the local server on `http://localhost:11434` (`DEFAULT_BASE_URL`).
+    2. Pull a model, e.g. `ollama pull qwen2.5:1.5b`.
+    3. Construct with no fakes - `OllamaRuntime()` (the default `client=None`
+       opens a real `httpx.AsyncClient`; only tests pass a
+       `client=httpx.AsyncClient(transport=httpx.MockTransport(...))`) - then
+       call `await runtime.generate(LLMRequest(model="qwen2.5:1.5b", prompt=...))`.
 """
 
 from __future__ import annotations

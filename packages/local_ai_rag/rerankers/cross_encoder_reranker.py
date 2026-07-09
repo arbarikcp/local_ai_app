@@ -7,6 +7,15 @@ machine). A cross-encoder scores (query, candidate) pairs jointly - more
 accurate than the vector-similarity-only first pass, but too slow to run
 over an entire corpus, which is why it reranks a small top-k candidate
 set rather than replacing retrieval.
+
+Enabling this for real:
+    1. In pyproject.toml, uncomment `"sentence-transformers>=3.0"` (shared with
+       `SentenceTransformersEmbedder` - only needs uncommenting once), then run `uv sync`.
+    2. Pick a model, e.g. `cross-encoder/ms-marco-MiniLM-L-6-v2` - no separate
+       download step, `CrossEncoder(model_name)` downloads and caches it on first use.
+    3. Construct with no overrides: `CrossEncoderReranker(model_name)` -
+       `load_fn`/`score_fn` already default to the real `sentence_transformers`
+       calls (`_real_load`, `_real_score` below); only tests inject fakes.
 """
 
 from __future__ import annotations

@@ -10,6 +10,15 @@ a model downloaded (this repo's machine constraint: no model runtime or
 weights on this machine at all). Synchronous calls run via
 asyncio.to_thread, same reasoning as MLXRuntime: blocking calls inside an
 async server can serialize requests.
+
+Enabling this for real:
+    1. In pyproject.toml, uncomment `"sentence-transformers>=3.0"`, then run `uv sync`.
+    2. Pick a model, e.g. `BAAI/bge-small-en-v1.5` (query_prefix="",
+       document_prefix="") - no separate download step, `SentenceTransformer(model_name)`
+       downloads and caches it on first use.
+    3. Construct with no overrides: `SentenceTransformersEmbedder(model_name)` -
+       `load_fn`/`encode_fn` already default to the real `sentence_transformers`
+       calls (`_real_load`, `_real_encode` below); only tests inject fakes.
 """
 
 from __future__ import annotations
