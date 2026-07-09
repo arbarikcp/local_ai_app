@@ -430,6 +430,47 @@ Deliberately not done in Module 8:
   schema — the other 4 use different schemas this module doesn't model. Documented as a thin
   sample rather than padded with schema-mismatched data.
 
+## Module 8.5 detail (done 2026-07-08)
+
+Almost no honest-skip surface this module — real SQLite persistence and real budget/
+truncation math need no live model at all, unlike most modules.
+
+Built:
+- `docs/modules/08_5_conversation_and_context_management.md` — theory chapter: turn
+  structure and chat templates, token-aware history accounting, the 5-strategy comparison
+  table (drop-oldest/last-N/summarization/importance-weighted/RAG-backed), sticky context,
+  SQLite persistence and restart resumption, the conversation-vs-RAG-vs-tool-state
+  separation rule, tool-call/tool-result atomicity, and memory deletion.
+- `packages/local_ai_core/conversation/`: `turn.py` (shared `Turn` model), `token_budget.py`
+  (`ConversationBudget.history_budget`, injected-token-counter design), `truncation.py`
+  (`group_turns()` for tool-pair atomicity, `drop_oldest`, `keep_system_plus_last_n`, both
+  sticky-aware), `summarizer.py` (`summarize_then_truncate`, injected `summarize_fn`, always
+  keeps 1-2 raw turns, falls back to `drop_oldest` if the summary itself still doesn't fit),
+  and `session_store.py` (SQLite via stdlib `sqlite3`, no server/dependency, schema with no
+  columns for retrieved-doc content or tool state by design).
+- `scripts/module_08_5/`: `chat_loop.py` (Lab 1/6: session-persisted chat + `/forget`),
+  `force_past_context_window.py` (Lab 3, fully real — no model needed to prove our own
+  budget math), `compare_truncation_strategies.py` (Lab 4, fully real).
+- `notebooks/08_5_conversation_and_context_management.ipynb` — **executed end-to-end**, with
+  almost every cell showing real computed results rather than honest-skips: real SQLite
+  restart-persistence, real budget-exceeded-then-resolved numbers, and a real
+  early-fact-retention comparison (drop_oldest: lost; summarize_then_truncate: retained).
+- `reports/module_08_5_conversation_memory_report.md` — deliverable, including a note about
+  adjusting the tool-pairing demo's budget so it shows the pair actually surviving intact
+  (more illustrative) rather than both being dropped together (still correct, less useful
+  to look at).
+- 94 new tests (750 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 8.5:
+- Lab 5 (recall measurement against early turns) — inherently needs a real model's real
+  recall behavior to mean anything; machine constraint, pending the resourced Mac.
+- Importance-weighted retention and RAG-backed memory are documented as strategies (theory
+  doc §5) but not implemented — importance scoring is task-specific and RAG-backed memory is
+  Module 11's entire subject, not a few functions bolted onto a conversation module.
+- No real chat-template rendering — `chat_loop.py`'s `render_history()` is an explicitly
+  labeled simple stand-in; a real adapter (Module 6) owns actual template rendering.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -454,7 +495,7 @@ Deliberately not done in Module 8:
 |---|---|---|---|---|---|
 | 7. Prompt engineering for small local models | [x] | [x] | [x] | [~] | prompt infra fully built + verified; real 3-model comparison and real compression-quality tradeoff pending a resourced Mac |
 | 8. Structured output and extraction | [x] | [x] | [x] | [~] | full reliability-ladder pipeline built + verified via FakeRuntime; real 3-model/3-mode comparison pending a resourced Mac |
-| 8.5. Conversation and context management | [ ] | [ ] | [ ] | [ ] | not started |
+| 8.5. Conversation and context management | [x] | [x] | [x] | [x] | complete — SQLite persistence, budget/truncation/summarization all fully verified with real (non-fake) proof; only real recall measurement (Lab 5) pending a resourced Mac |
 | 9. Embeddings from first principles | [ ] | [ ] | [ ] | [ ] | not started |
 | 10. Vector search and local vector databases | [ ] | [ ] | [ ] | [ ] | not started |
 

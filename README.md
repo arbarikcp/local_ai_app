@@ -306,11 +306,28 @@ fully built and verified without a live runtime.
   — includes full write-ups of two real bugs and one caught demo gap from this module's own
   build process.
 
-#### ⬜ Module 8.5 — Conversation and context management
+#### ✅ Module 8.5 — Conversation and context management
 
 Manages multi-turn state within a small context window: token-aware history budgets,
-drop-oldest vs. summarization-buffer strategies, session persistence, and keeping
-conversation memory, RAG memory, and tool state separate. — curriculum.md §18.5
+drop-oldest vs. summarization-buffer strategies, SQLite session persistence, and keeping
+conversation memory, RAG memory, and tool state separate. Almost no honest-skip surface —
+real SQLite persistence and real budget/truncation math need no live model.
+
+- **Read:** [docs/modules/08_5_conversation_and_context_management.md](docs/modules/08_5_conversation_and_context_management.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/08_5_conversation_and_context_management.ipynb   # real SQLite persistence, budget math, and strategy comparison, no installs needed
+  uv run python scripts/module_08_5/force_past_context_window.py                # runs for real, no installs needed
+  uv run python scripts/module_08_5/compare_truncation_strategies.py            # runs for real, no installs needed
+  uv run python scripts/module_08_5/chat_loop.py --model qwen2.5:1.5b           # interactive, needs Ollama
+  uv run pytest packages/local_ai_core/conversation scripts/module_08_5 -q      # 94 tests, no runtime needed
+  ```
+- **Install needed:** nothing for persistence, budgeting, or truncation/summarization
+  strategies — all proven with real (non-fake) results. Only the interactive chat loop and
+  Lab 5's recall measurement need Ollama.
+- **Deliverable:** [reports/module_08_5_conversation_memory_report.md](reports/module_08_5_conversation_memory_report.md)
+  — includes a real early-fact-retention comparison (drop_oldest loses it, summarization
+  retains it) and real SQLite restart-persistence proof.
 
 #### ⬜ Module 9 — Embeddings from first principles
 
