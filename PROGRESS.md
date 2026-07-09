@@ -512,6 +512,53 @@ Deliberately not done in Module 9:
   models — documented explicitly as an honest stand-in rather than silently passed off as a
   real model comparison.
 
+## Module 10 detail (done 2026-07-09)
+
+No honest-skip surface at all this module — Chroma and LanceDB are vector database libraries,
+not LLM runtimes or model weights, so both are installed (`uv add chromadb lancedb`,
+`onnxruntime<1.20` pinned for macOS 13 wheel compatibility) and every lab runs for real.
+
+Built:
+- `docs/modules/10_vector_search_and_local_vector_databases.md` — theory chapter: brute-force
+  vs. ANN search, indexing, metadata filters, hybrid search, persistence, incremental
+  updates, deletes/reindexing, local vector DB trade-offs, and metadata-first retrieval
+  architecture.
+- `packages/local_ai_rag/stores/`: `vector_store.py` (`VectorStore` protocol shared by all
+  backends), `numpy_store.py` (async wrapper around Module 9's `NumpyEmbeddingIndex`, which
+  gained a `delete()` method this module), `chroma_store.py` (real Chroma collection, cosine
+  space, `upsert`-based overwrite, `where`-clause metadata filtering, real persistence),
+  `lancedb_store.py` (real LanceDB table, cosine metric, `merge_insert`-based overwrite,
+  client-side JSON metadata filtering, real persistence), `hybrid.py` (term-overlap keyword
+  scoring + Reciprocal Rank Fusion of vector and keyword rankings).
+- `scripts/module_10/`: `store_comparison.py` (Labs 1-4, 6: identical corpus across all three
+  backends, agreement check, metadata filters, hybrid search recovery), `benchmark_and_evaluate.py`
+  (Labs 5-6: real latency measurement and real recall/precision/MRR/nDCG across all three
+  backends, reusing Module 9's `eval.py` metric functions).
+- `notebooks/10_vector_search_and_local_vector_databases.ipynb` — **executed end-to-end**,
+  every cell a real measurement: 3-backend agreement, metadata filtering, hybrid search
+  recovery, upsert/delete correctness, real on-disk persistence across a fresh client, and
+  real latency/recall numbers.
+- `reports/module_10_vector_store_comparison_report.md` — deliverable, including a real
+  implementation bug found and fixed while building this module (see below).
+- 53 new tests (900 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Real bug found and fixed while building this module: Chroma's plain `collection.add()` and
+LanceDB's plain `table.add()` do **not** overwrite an existing document on a duplicate id —
+Chroma silently keeps the original document, LanceDB silently appends a duplicate row. Caught
+by testing the overwrite-on-same-id contract Module 9's `NumpyEmbeddingIndex` already
+established, not assumed to hold. Fixed with each backend's real upsert primitive
+(`collection.upsert()`, `table.merge_insert("id").when_matched_update_all()...`).
+
+Deliberately not done in Module 10:
+- SQLite + vector extension and DuckDB + Parquet + vectors are documented in the theory doc's
+  options table but not implemented — three real backends already prove the `VectorStore`
+  protocol is backend-agnostic.
+- No ANN-vs-brute-force accuracy divergence demonstrated — the corpus used throughout this
+  module (5 documents) is too small for Chroma/LanceDB's ANN indexes to diverge from exact
+  search; a larger-scale benchmark is the natural next step.
+- Reranking and context packing are Module 12's subject, not implemented here.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -538,7 +585,7 @@ Deliberately not done in Module 9:
 | 8. Structured output and extraction | [x] | [x] | [x] | [~] | full reliability-ladder pipeline built + verified via FakeRuntime; real 3-model/3-mode comparison pending a resourced Mac |
 | 8.5. Conversation and context management | [x] | [x] | [x] | [x] | complete — SQLite persistence, budget/truncation/summarization all fully verified with real (non-fake) proof; only real recall measurement (Lab 5) pending a resourced Mac |
 | 9. Embeddings from first principles | [x] | [x] | [x] | [x] | complete — normalize/cosine/truncation/search/eval all fully verified with real (non-fake) proof; only a real neural embedding model run pending a resourced Mac |
-| 10. Vector search and local vector databases | [ ] | [ ] | [ ] | [ ] | not started |
+| 10. Vector search and local vector databases | [x] | [x] | [x] | [x] | complete — no honest-skip surface, all three backends (NumPy/Chroma/LanceDB) and hybrid search fully verified with real (non-fake) proof |
 
 ## Phase 3 — RAG (Modules 11–13)
 

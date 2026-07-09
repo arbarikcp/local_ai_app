@@ -354,10 +354,28 @@ all real, not fabricated. — curriculum.md §19
   — includes a real dimensionality-vs-ranking-quality comparison (64d vs. 4d hash collisions
   degrade MRR/nDCG while recall@k stays unaffected) and real throughput timing.
 
-#### ⬜ Module 10 — Vector search and local vector databases
+#### ✅ Module 10 — Vector search and local vector databases
 
 Brute-force vs. ANN search, metadata/ACL-first retrieval design, and trade-offs across
-NumPy/Chroma/LanceDB/DuckDB local vector stores. — curriculum.md §20
+NumPy/Chroma/LanceDB local vector stores, plus hybrid (keyword + vector) search. No
+honest-skip surface at all — Chroma and LanceDB are vector database libraries, not LLM
+runtimes, so both are installed and every lab runs for real. — curriculum.md §20
+
+- **Read:** [docs/modules/10_vector_search_and_local_vector_databases.md](docs/modules/10_vector_search_and_local_vector_databases.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/10_vector_search_and_local_vector_databases.ipynb   # real 3-backend comparison, upsert/delete, persistence, hybrid search, latency+recall
+  uv run python scripts/module_10/store_comparison.py                              # runs for real, no installs needed
+  uv run python scripts/module_10/benchmark_and_evaluate.py                        # runs for real, no installs needed
+  uv run pytest packages/local_ai_rag/stores scripts/module_10 -q                  # 53 tests, no runtime needed
+  ```
+- **Install needed:** `chromadb` and `lancedb` (already added via `uv add`) — both are
+  vector database libraries, not LLM runtimes or model weights, so they don't conflict with
+  this repo's no-LLM-runtime machine constraint.
+- **Deliverable:** [reports/module_10_vector_store_comparison_report.md](reports/module_10_vector_store_comparison_report.md)
+  — includes a real bug found while building this module (Chroma's and LanceDB's plain `add()`
+  don't overwrite on a duplicate id; fixed with real upsert primitives), a real hybrid-search
+  recovery demo, and real latency/recall numbers across all three backends.
 
 ### Phase: RAG
 

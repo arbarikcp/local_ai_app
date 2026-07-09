@@ -138,3 +138,23 @@ class TestNumpyEmbeddingIndex:
         assert len(index) == 1
         results = index.search(np.array([0.0, 1.0]), k=1)
         assert results[0].text == "second version"
+
+    def test_delete_removes_the_document(self):
+        index = NumpyEmbeddingIndex()
+        index.add("d1", "text", np.array([1.0, 0.0]))
+        index.delete("d1")
+        assert "d1" not in index
+        assert len(index) == 0
+
+    def test_delete_of_missing_id_is_not_an_error(self):
+        index = NumpyEmbeddingIndex()
+        index.delete("does-not-exist")
+        assert len(index) == 0
+
+    def test_deleted_document_is_absent_from_search_results(self):
+        index = NumpyEmbeddingIndex()
+        index.add("d1", "doc 1", np.array([1.0, 0.0]))
+        index.add("d2", "doc 2", np.array([1.0, 0.0]))
+        index.delete("d1")
+        results = index.search(np.array([1.0, 0.0]), k=5)
+        assert [r.doc_id for r in results] == ["d2"]

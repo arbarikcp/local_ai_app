@@ -95,6 +95,12 @@ class NumpyEmbeddingIndex:
     def __contains__(self, doc_id: str) -> bool:
         return doc_id in self._documents
 
+    def delete(self, doc_id: str) -> None:
+        """No-op on a missing id - deleting something already absent isn't
+        an error condition (theory doc "Deletes and incremental updates").
+        """
+        self._documents.pop(doc_id, None)
+
     def search(
         self, query_embedding: np.ndarray, k: int = 5, metadata_filter: dict[str, Any] | None = None
     ) -> list[SearchResult]:

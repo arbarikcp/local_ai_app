@@ -13,6 +13,9 @@ dependencies = [
     "rich>=13.9",
     "typer>=0.15",
     "openai>=1.55",
+    "chromadb>=1.5.9",
+    "onnxruntime<1.20",
+    "lancedb>=0.34.0",
 ]
 
 [dependency-groups]
@@ -25,7 +28,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "tests"]
-pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09"]
+pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10"]
 asyncio_mode = "auto"
 
 [tool.ruff]
