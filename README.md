@@ -532,10 +532,28 @@ just claimed. — curriculum.md §26
   authorization, that tool descriptions are screened as prompt surface area, and that resources
   are sandboxed at registration time, not just read time.
 
-#### ⬜ Module 17 — Local coding assistants
+#### ✅ Module 17 — Local coding assistants
 
 A local, repo-aware coding assistant: repo search, code explanation, test generation, patch
-proposals with human approval before writes. — curriculum.md §27
+proposals with human approval before writes. The capstone of the Agents/tools phase — a real,
+committed sample repo with a genuine pre-existing bug, genuinely fixed and proven by a real
+pytest run (1 failed → 7 passed). — curriculum.md §27
+
+- **Read:** [docs/modules/17_local_coding_assistants.md](docs/modules/17_local_coding_assistants.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/17_local_coding_assistants.ipynb   # real AST indexing/patching/testing, FakeRuntime for patch text only
+  uv run python scripts/module_17/index_repo_demo.py               # runs for real, no installs needed
+  uv run python scripts/module_17/generate_tests_demo.py           # runs for real, no installs needed
+  uv run python scripts/module_17/patch_and_test_demo.py           # runs for real, no installs needed
+  uv run pytest packages/local_ai_agents scripts/module_17 -q      # 58 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — repo indexing (AST parsing), patch validation/application, and
+  test execution are all proven with real (non-fake) results, including a real pre-existing bug
+  genuinely fixed. Only patch/test-generation text needs Ollama/another `LLMRuntime` adapter.
+- **Deliverable:** [reports/module_17_coding_assistant_report.md](reports/module_17_coding_assistant_report.md)
+  — includes the real before/after pytest transition (1 failed, 6 passed → 7 passed) and a
+  deliberately hallucinated patch rejected by a real context-match check.
 
 ### Phase: Advanced
 
