@@ -330,7 +330,7 @@ Deliberately not done in Module 6.5:
 | Module | Status |
 |---|---|
 | 6.5 Serving concurrency, batching, caching | complete — gateway infra (queue/cache/admission control) fully built and verified; real 1/2/4-concurrency measurement pending a resourced Mac |
-| 20. Inference optimization under 8–24GB | not started |
+| 20. Inference optimization under 8–24GB | complete — model router, fallback chain, benchmark harness, prompt compression, and performance dashboard fully built and verified; ten other topics reused unchanged from Modules 4/6/6.5/12; real per-runtime measurement pending a resourced Mac |
 
 ## Module 7 detail (done 2026-07-08)
 
@@ -997,6 +997,51 @@ Deliberately not done in Module 19:
 - A real training run to produce the overfitting loss curve — synthetic-but-realistic, labeled
   as such everywhere it appears.
 
+## Module 20 detail (done 2026-07-10)
+
+Mostly a playbook, not a rebuild — ten of sixteen core topics (quantization choice, context
+budgeting, streaming, model warmup, prompt/response/semantic caching, KV cache behavior,
+concurrency control, request queueing, timeout policies, reranking vs bigger model) are cited
+straight from Modules 4, 6, 6.5, and 12, not reimplemented. Built to fill a gap: this module sits
+earlier in the curriculum's phase grouping (Serving/performance foundation) than Module 19 but
+was skipped when the build jumped from 18 to 19; completed now to close that gap.
+
+Built:
+- `docs/modules/20_inference_optimization_under_8_24gb_ram.md` — theory chapter with an explicit
+  reuse table (topic -> file that already implements it) plus all three of curriculum's
+  optimization playbooks (latency/quality/memory) reproduced with citations to the real function
+  each step maps to.
+- `packages/local_ai_core/optimization/`: `model_router.py` (`route_model()` — any single
+  escalation signal routes to the large model tier, the opposite gate shape from Module 19's
+  fine-tuning precondition), `fallback.py` (`FallbackRuntime` — an ordered runtime chain, reusing
+  Module 6's exact retryable-error taxonomy), `benchmark_harness.py` (`run_benchmark()` — real
+  latency/tokens-per-second measurement via `FakeRuntime`'s simulated latency), `dashboard.py`
+  (`InMemoryMetricsHook` + `PerformanceDashboard` — real p50/p95/error-rate aggregation,
+  implementing Module 6's existing `MetricsHook` Protocol), `prompt_compression.py`
+  (`compress_prompt()` — real, deterministic, non-LLM duplicate-line removal and whitespace
+  collapsing, distinct from Module 8.5's LLM-based `summarizer.py`).
+- `scripts/module_20/`: `benchmark_harness_demo.py` (Lab 1), `context_budget_demo.py` (Lab 2 —
+  composes Module 12's `ContextBudget`/`pack_context()` and Module 8.5's `ConversationBudget`
+  unchanged, no new package code), `model_router_demo.py` (Lab 3), `fallback_demo.py` (Lab 4),
+  `queueing_streaming_demo.py` (Labs 5-6 — Module 6.5's `BoundedRequestQueue` and Module 6's
+  `FakeRuntime.stream()`, both unchanged), `performance_dashboard_demo.py` (Lab 7).
+- `notebooks/20_inference_optimization_under_8_24gb_ram.ipynb` — **executed end-to-end**, every
+  cell a real computation.
+- `reports/module_20_inference_optimization_report.md` — deliverable, including real
+  differentiated latency across three simulated configs and a real mixed-traffic dashboard where
+  mean latency genuinely falls below the median due to zero-latency failure records.
+- 55 new tests (1631 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 20:
+- Real per-runtime, per-quantization measurement against a live Ollama/MLX server — the ten
+  reused topics are fully built and unit-tested via fakes; real measurement is deferred to the
+  resourced 32GB Mac, same as Modules 4-6.5.
+- Thermal throttling, memory pressure, disk pressure as code — genuinely hardware-dependent
+  runtime behavior; documented as operational guidance, not approximated with fake sensors.
+- A new context-budgeting package — Lab 2 is composition only; both budgeters it uses already
+  existed from Modules 8.5 and 12.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1013,7 +1058,7 @@ Deliberately not done in Module 19:
 | Module | Status |
 |---|---|
 | 6.5 Serving concurrency, batching, caching | complete — gateway infra (queue/cache/admission control) fully built and verified; real 1/2/4-concurrency measurement pending a resourced Mac |
-| 20. Inference optimization under 8–24GB | not started |
+| 20. Inference optimization under 8–24GB | complete — model router, fallback chain, benchmark harness, prompt compression, and performance dashboard fully built and verified; ten other topics reused unchanged from Modules 4/6/6.5/12; real per-runtime measurement pending a resourced Mac |
 
 ## Phase 2 — Application primitives (Modules 7–10, 8.5)
 

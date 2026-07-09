@@ -254,10 +254,33 @@ runtime: `FakeRuntime`'s simulated latency proves queueing and caching for real.
   concurrency-accounting bug this module's own tests caught. Real per-runtime concurrency
   measurement pending the resourced 32GB Mac.
 
-#### ⬜ Module 20 — Inference optimization under 8–24 GB RAM
+#### ✅ Module 20 — Inference optimization under 8–24 GB RAM
 
-(Built later in sequence, grouped here per the curriculum map.) Optimizes latency, memory,
-and reliability for local LLM apps once the basics are in place — see curriculum.md §30.
+Mostly a playbook, not a rebuild: ten of its sixteen core topics (quantization choice, context
+budgeting, streaming, caching, KV cache behavior, concurrency control, queueing, timeout
+policies, reranking vs bigger model) are cited straight from Modules 4, 6, 6.5, and 12. The five
+genuinely new pieces — model router, fallback chain, benchmark harness, prompt compression,
+performance dashboard — are real, fully tested code with real `FakeRuntime`-measured latency
+numbers. — curriculum.md §30
+
+- **Read:** [docs/modules/20_inference_optimization_under_8_24gb_ram.md](docs/modules/20_inference_optimization_under_8_24gb_ram.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/20_inference_optimization_under_8_24gb_ram.ipynb   # real measurement/routing/compression, no installs needed
+  uv run python scripts/module_20/benchmark_harness_demo.py                       # runs for real, no installs needed
+  uv run python scripts/module_20/model_router_demo.py                            # runs for real, no installs needed
+  uv run python scripts/module_20/fallback_demo.py                                # runs for real, no installs needed
+  uv run python scripts/module_20/performance_dashboard_demo.py                   # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/optimization scripts/module_20 -q          # 55 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — the model router, fallback chain, benchmark harness, prompt
+  compression, and performance dashboard are all stdlib Python over the existing `LLMRuntime`
+  abstraction. Real per-runtime, per-quantization measurement needs a live Ollama/MLX server on
+  the resourced Mac.
+- **Deliverable:** [reports/module_20_inference_optimization_report.md](reports/module_20_inference_optimization_report.md)
+  — includes real differentiated latency across three simulated configs (5.68ms/21.07ms/61.18ms
+  mean) and a real mixed-traffic dashboard where the mean latency genuinely falls below the
+  median because of two zero-latency failure records.
 
 ### Phase: Application primitives
 

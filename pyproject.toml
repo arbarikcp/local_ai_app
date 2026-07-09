@@ -49,7 +49,7 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "tests"]
-pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17", "scripts/module_18", "scripts/module_19"]
+pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17", "scripts/module_18", "scripts/module_19", "scripts/module_20"]
 asyncio_mode = "auto"
 
 [tool.ruff]
