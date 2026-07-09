@@ -430,10 +430,31 @@ cross-encoder reranker. — curriculum.md §22
   indexing savings, and an honest (not cherry-picked) report of where `FakeEmbedder` underserves
   parent-child retrieval and HyDE on this corpus.
 
-#### ⬜ Module 13 — RAG v3: evaluation, citations, and guardrails
+#### ✅ Module 13 — RAG v3: evaluation, citations, and guardrails
 
-Treats RAG as a production subsystem: context precision/recall/faithfulness metrics, the
-judge-model problem, and citation/guardrail enforcement. — curriculum.md §23
+Treats RAG as a production subsystem: a real 16-question golden dataset, retrieval/answer/
+citation metrics, a from-scratch AUROC implementation, judge-human agreement (simple agreement,
+Cohen's kappa), and prompt-injection pattern detection. Only judge verdicts need a live LLM. —
+curriculum.md §23
+
+- **Read:** [docs/modules/13_rag_v3_evaluation_citations_guardrails.md](docs/modules/13_rag_v3_evaluation_citations_guardrails.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/13_rag_v3_evaluation_citations_guardrails.ipynb   # real metrics/AUROC/calibration, FakeRuntime for judge/generation
+  uv run python scripts/module_13/build_golden_set.py                            # runs for real, no installs needed
+  uv run python scripts/module_13/run_rag_evaluation.py                          # runs for real, no installs needed
+  uv run python scripts/module_13/citation_and_injection_checks.py               # runs for real, no installs needed
+  uv run python scripts/module_13/judge_calibration_demo.py                      # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/evals scripts/module_13 -q                # 92 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — golden-set loading, every metric (retrieval, answer, citation,
+  AUROC, judge calibration), and prompt-injection detection are all proven with real (non-fake)
+  results. Real judge verdicts, synthetic questions, and generation need Ollama/another
+  `LLMRuntime` adapter on the resourced Mac.
+- **Deliverable:** [reports/module_13_rag_evaluation_report.md](reports/module_13_rag_evaluation_report.md)
+  — includes two real bugs found and fixed while building this module (a citation-marker
+  tokenization bug and a sentence-splitting bug that silently zeroed out faithfulness scores),
+  plus a real, non-rubber-stamped judge-calibration and AUROC result.
 
 ### Phase: Agents/tools
 

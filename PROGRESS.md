@@ -669,6 +669,62 @@ Deliberately not done in Module 12:
 - Sliding windows — already covered by Module 8's `chunk_text(..., overlap_chars=N)`, reused
   unchanged rather than reimplemented.
 
+## Module 13 detail (done 2026-07-09)
+
+Every metric, statistic, and detector runs for real this module — only `LocalJudge`'s own
+verdicts need a live LLM (`FakeRuntime`-backed, fully unit-tested).
+
+Built:
+- `evals/rag_eval/nimbus_golden_set.jsonl` — 16 real, hand-authored questions over the Module
+  11 Nimbus handbook corpus, curriculum's exact schema.
+- `docs/modules/13_rag_v3_evaluation_citations_guardrails.md` — theory chapter covering all 13
+  core topics, the judge-model problem, the RAG metrics/failure-taxonomy tables, and an
+  architecture note on the retrieval-metrics refactor (see below).
+- `packages/local_ai_core/evals/`: `golden_set.py` (`GoldenCase` + JSONL loader),
+  `retrieval_metrics.py` (recall/precision/MRR/nDCG **moved from Module 9**, plus Ragas-style
+  `context_precision`/`context_recall` aliases), `answer_metrics.py` (must_contain/
+  must_not_contain, keyword-overlap relevance, refusal detection), `citation_verifier.py`
+  (grounding + chunk-level faithfulness scoring), `hallucination_detection.py` (AUROC
+  implemented from scratch, no `scikit-learn` dependency), `local_judge.py` (structured
+  faithfulness verdicts via any `LLMRuntime`), `judge_calibration.py` (simple agreement,
+  Cohen's kappa), `synthetic_questions.py`, `prompt_injection.py` (7-pattern regex screen).
+- `scripts/module_13/`: `common.py` (shared `ScriptedGoldenRuntime` — a controlled generator
+  stand-in with 2 deliberately corrupted golden cases), `build_golden_set.py` (Labs 1-2),
+  `run_rag_evaluation.py` (Labs 3-4), `citation_and_injection_checks.py` (Labs 5-6),
+  `judge_calibration_demo.py` (Labs 7-8).
+- `notebooks/13_rag_v3_evaluation_citations_guardrails.ipynb` — **executed end-to-end**, every
+  cell a real measurement.
+- `reports/module_13_rag_evaluation_report.md` — deliverable, including two real bugs found
+  and fixed while building this module (see below) and a real, non-rubber-stamped
+  judge-calibration/AUROC result.
+- 92 new tests (1148 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Architecture refactor: Module 9's `local_ai_rag/embeddings/eval.py` had defined
+`recall_at_k`/`precision_at_k`/`reciprocal_rank`/`ndcg_at_k` as RAG-embedding-specific code, but
+they have no embedding-specific coupling. Moved to `local_ai_core/evals/retrieval_metrics.py`
+(matching curriculum.md §23's own literal path and §8's canonical structure); `eval.py` now
+imports and re-exports them, so existing imports keep working and all 31 of Module 9's original
+tests for these functions still pass unmodified against the new source of truth.
+
+Real bugs found and fixed while building this module:
+1. `citation_faithfulness_score` counted the citation marker itself (e.g. `password_reset` from
+   `[password_reset::0]`) as claim text, artificially inflating overlap with any chunk merely
+   *about* that topic. Fixed by stripping the marker before tokenizing.
+2. `ScriptedGoldenRuntime`'s citations were appended after the answer's trailing period, which
+   simple sentence-splitting treats as a new sentence with no claim text attached — silently
+   zeroing out every faithfulness score, even for genuinely well-grounded answers. Fixed by
+   moving citation markers inside the sentence, before the period, matching every other
+   module's citation convention.
+
+Deliberately not done in Module 13:
+- No real LLM-generated judge verdicts, synthetic questions, or generation — pending the
+  resourced 32GB Mac.
+- No dedicated "context utilization" metric — `must_contain_score` is the practical stand-in;
+  a real one would need the same heuristic `citation_faithfulness_score` already provides.
+- No separate RAG regression-testing framework — `run_rag_evaluation.py` re-run after any
+  pipeline change, diffing the metrics table, is the regression test.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -703,7 +759,7 @@ Deliberately not done in Module 12:
 |---|---|---|---|---|---|
 | 11. RAG v1: naive RAG | [x] | [x] | [x] | [x] | complete — loading/chunking/embedding/retrieval/prompt-assembly/citations all fully verified with real (non-fake) proof against a genuine 20-file corpus; only real answer generation pending a resourced Mac |
 | 12. RAG v2: production retrieval | [x] | [x] | [x] | [x] | complete — chunking strategies, ACL/time-aware retrieval, heuristic reranking, context packing, source citations, and incremental indexing all fully verified with real (non-fake) proof; real generation and cross-encoder reranking pending a resourced Mac |
-| 13. RAG v3: evaluation, citations, and guardrails | [ ] | [ ] | [ ] | [ ] | not started |
+| 13. RAG v3: evaluation, citations, and guardrails | [x] | [x] | [x] | [x] | complete — golden dataset, retrieval/answer/citation metrics, AUROC, judge calibration, and injection detection all fully verified with real (non-fake) proof; only real judge/generation quality pending a resourced Mac |
 
 ## Phase 4 — Agents/tools (Modules 14–17)
 

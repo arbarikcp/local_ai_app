@@ -1,15 +1,40 @@
 """Embedding evaluation: recall@k, precision@k, MRR, nDCG@k, latency, and
 embedding throughput (theory doc "Embedding evaluation" - the exact metric
 list the curriculum names).
+
+recall_at_k/precision_at_k/reciprocal_rank/ndcg_at_k moved to
+`local_ai_core.evals.retrieval_metrics` in Module 13 (generic,
+reference-based metrics with no embedding-specific coupling belong in
+shared eval infra, not duplicated per task package) - re-exported here so
+existing imports (`from local_ai_rag.embeddings.eval import recall_at_k`)
+keep working unchanged.
 """
 
 from __future__ import annotations
 
-import math
 import time
 from dataclasses import dataclass, field
 
+from local_ai_core.evals.retrieval_metrics import (
+    ndcg_at_k,
+    precision_at_k,
+    reciprocal_rank,
+    recall_at_k,
+)
+
 from .embedder import Embedder, NumpyEmbeddingIndex
+
+__all__ = [
+    "EmbeddingEvalCase",
+    "EvalCaseResult",
+    "EvalSummary",
+    "evaluate_embedder",
+    "measure_embedding_throughput",
+    "ndcg_at_k",
+    "precision_at_k",
+    "reciprocal_rank",
+    "recall_at_k",
+]
 
 
 @dataclass(frozen=True)
@@ -19,39 +44,6 @@ class EmbeddingEvalCase:
     query: str
     positive_doc_ids: list[str]
     negative_doc_ids: list[str] = field(default_factory=list)
-
-
-def recall_at_k(retrieved_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    if not relevant_ids:
-        return 0.0
-    hits = len(set(retrieved_ids[:k]) & relevant_ids)
-    return hits / len(relevant_ids)
-
-
-def precision_at_k(retrieved_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    top_k = retrieved_ids[:k]
-    if not top_k:
-        return 0.0
-    hits = sum(1 for doc_id in top_k if doc_id in relevant_ids)
-    return hits / len(top_k)
-
-
-def reciprocal_rank(retrieved_ids: list[str], relevant_ids: set[str]) -> float:
-    for rank, doc_id in enumerate(retrieved_ids, start=1):
-        if doc_id in relevant_ids:
-            return 1.0 / rank
-    return 0.0
-
-
-def ndcg_at_k(retrieved_ids: list[str], relevant_ids: set[str], k: int) -> float:
-    """Binary-relevance nDCG@k (each relevant doc contributes gain 1, not graded relevance)."""
-    top_k = retrieved_ids[:k]
-    dcg = sum(
-        1.0 / math.log2(rank + 1) for rank, doc_id in enumerate(top_k, start=1) if doc_id in relevant_ids
-    )
-    ideal_hits = min(len(relevant_ids), k)
-    idcg = sum(1.0 / math.log2(rank + 1) for rank in range(1, ideal_hits + 1))
-    return dcg / idcg if idcg > 0 else 0.0
 
 
 def _mean(values: list[float]) -> float:
