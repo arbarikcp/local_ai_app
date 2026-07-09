@@ -635,10 +635,30 @@ curriculum.md §29
 
 ### Phase: Production
 
-#### ⬜ Module 21 — Observability and tracing
+#### ✅ Module 21 — Observability and tracing
 
-Makes local AI apps debuggable: traces that map to user-visible failures, not just raw logs.
-— curriculum.md §31
+Makes local AI apps debuggable: real structured JSON logs with an explicit prompt-logging
+policy, real regex-based PII redaction, a metrics registry matching curriculum's exact metric
+table, a real trace-span tree matching curriculum's trace model exactly, and a SQLite-backed
+evaluation/feedback store. Genuinely new code — `packages/local_ai_core/tracing/` was scaffolded
+empty until this module. — curriculum.md §31
+
+- **Read:** [docs/modules/21_observability_and_tracing.md](docs/modules/21_observability_and_tracing.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/21_observability_and_tracing.ipynb   # real logging/tracing/redaction, no installs needed
+  uv run python scripts/module_21/trace_spans_demo.py                # runs for real, no installs needed
+  uv run python scripts/module_21/rag_retrieval_trace_demo.py        # runs for real, no installs needed
+  uv run python scripts/module_21/observability_dashboard_demo.py    # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/tracing scripts/module_21 -q  # 64 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — structured logging, PII redaction, the metrics registry, trace
+  spans, and the eval/feedback store are all stdlib Python (`logging`, `re`, `sqlite3`) over the
+  existing `LLMRuntime` abstraction. No new dependency, real OpenTelemetry SDK adoption
+  deliberately deferred (this module's own span tree already proves the trace-model shape).
+- **Deliverable:** [reports/module_21_observability_report.md](reports/module_21_observability_report.md)
+  — includes a real cosine-similarity RAG retrieval trace and a real proof that PII redaction
+  correctly resolves overlapping categories (an SSN is never miscounted as a phone number).
 
 #### ⬜ Module 22 — Security, privacy, and red teaming
 

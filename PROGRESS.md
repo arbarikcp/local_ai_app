@@ -1042,6 +1042,48 @@ Deliberately not done in Module 20:
 - A new context-budgeting package — Lab 2 is composition only; both budgeters it uses already
   existed from Modules 8.5 and 12.
 
+## Module 21 detail (done 2026-07-10)
+
+Genuinely new code, not a rebuild — `packages/local_ai_core/tracing/` was scaffolded empty back
+in Phase 0 and untouched until this module. No honest-skip surface at all: every piece (logs,
+PII redaction, metrics, trace spans, eval/feedback store) is real, deterministic, model-free
+Python. Only deliberate reuse: Module 6's `ensure_trace_id()` and `Timer`.
+
+Built:
+- `docs/modules/21_observability_and_tracing.md` — theory chapter covering all 12 core topics,
+  with curriculum's exact trace model and metric table reproduced and tied to real functions.
+- `packages/local_ai_core/tracing/`: `structured_logging.py` (`StructuredLogger`,
+  `PromptLoggingPolicy` — FULL/REDACTED/HASH_ONLY/NONE, real JSON emission), `pii_redaction.py`
+  (`redact_pii()` — real regex detection across email/phone/SSN/credit-card with correct
+  overlapping-pattern precedence), `metrics_registry.py` (`MetricsRegistry` — curriculum's exact
+  12-metric table as real counters/observables with real p50/p95 aggregation), `trace.py`
+  (`TraceBuilder`/`Trace`/`TraceSpan` — curriculum's exact trace-model shape, real elapsed time
+  via Module 6's `Timer`, `record_retrieval_step()`/`record_tool_call_step()`/
+  `record_agent_step()` convenience builders), `eval_feedback_store.py` (`EvalFeedbackStore` —
+  real SQLite persistence for eval runs and user feedback, same pattern as Module 8.5's
+  `SessionStore` and Module 19's `AdapterRegistry`).
+- `scripts/module_21/`: `structured_logs_demo.py` (Labs 1-2), `trace_spans_demo.py` (Lab 3),
+  `rag_retrieval_trace_demo.py` (Lab 4 — a real cosine-similarity search via Module 9's
+  `NumpyEmbeddingIndex`), `tool_call_trace_demo.py` (Lab 5), `observability_dashboard_demo.py`
+  (Lab 6 — traces, metrics, eval scores, and feedback tied together by trace_id).
+- `notebooks/21_observability_and_tracing.ipynb` — **executed end-to-end**, every cell a real
+  computation.
+- `reports/module_21_observability_report.md` — deliverable, including a real proof that PII
+  redaction correctly resolves overlapping categories (an SSN is never miscounted as a phone
+  number) and a real cosine-similarity RAG retrieval trace.
+- 64 new tests (1695 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 21:
+- The real OpenTelemetry SDK — `trace.py` matches curriculum's trace-model shape exactly using
+  stdlib only; adopting `opentelemetry-sdk` as a new dependency is deferred since this module's
+  own span tree already proves the shape correctly.
+- A real token counter feeding `prompt_tokens`/`completion_tokens` — `metrics_registry.py`
+  aggregates whatever values a caller supplies; Module 1's `HFTokenizerCounter` and Module 6's
+  adapters already own real token counting.
+- A rendered HTML/web dashboard — Lab 6 is a printed markdown report, curriculum's explicit
+  "dashboard *or* report" choice, consistent with every other module's report-based deliverable.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1096,7 +1138,11 @@ Deliberately not done in Module 20:
 
 ## Phase 6 — Production (Modules 21–23)
 
-All not started.
+| Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
+|---|---|---|---|---|---|
+| 21. Observability and tracing | [x] | [x] | [x] | [x] | complete — structured logs, PII redaction, metrics registry, trace spans, and eval/feedback store all fully verified with real (non-fake) proof; no honest-skip surface, genuinely new code |
+| 22. Security, privacy, and red teaming | [ ] | [ ] | [ ] | [ ] | not started |
+| 23. Packaging and deployment | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Projects & capstone
 
