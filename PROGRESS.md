@@ -607,6 +607,68 @@ Deliberately not done in Module 11:
 - Text cleaning is minimal (title/body split only) — real-world document parsing (PDFs,
   HTML, OCR) is Module 12's "deeper document parsing."
 
+## Module 12 detail (done 2026-07-09)
+
+Every stage of the production RAG pipeline diagram runs for real this module except final
+answer generation (needs a live LLM runtime) and the cross-encoder reranker (needs downloaded
+model weights) — both wired via dependency injection and fully unit-tested with fakes.
+Document parsing (PDF layout, OCR, parser comparison) is deliberately theory-only — see the
+theory doc's "Scope note" — since it needs real messy PDFs and heavy optional dependencies for
+a single lab's payoff; `structural_chunker.py` demonstrates the same underlying principle
+(structure-aware chunk boundaries) on markdown instead.
+
+Built:
+- `docs/modules/12_rag_v2_production_retrieval.md` — theory chapter covering all 16 core
+  topics, the production pipeline diagram, the RAG memory note, the context packing strategy,
+  and an explicit scope note on document parsing.
+- `packages/local_ai_rag/chunkers/`: `parent_child_chunker.py` (small child chunks reference
+  large parent chunks), `semantic_chunker.py` (embedding-similarity-based chunk boundaries,
+  genuinely different from fixed-size chunking), `structural_chunker.py` (markdown
+  tables/fenced code blocks preserved as atomic units — caught and fixed a placeholder-index
+  collision bug between the two block types during development).
+- `packages/local_ai_rag/retrievers/`: `parent_child_retriever.py` (searches children, returns
+  deduplicated parent text), `query_expansion.py` (`rewrite_query`, `multi_query_retrieve` via
+  RRF, `hyde_retrieve`), `time_aware.py` (exponential recency decay), `acl.py`
+  (`AclAwareRetriever`, predicate-based non-exact-match filtering, over-fetch to preserve `k`).
+- `packages/local_ai_rag/rerankers/`: `heuristic_reranker.py` (real, non-neural vector+keyword
+  reordering), `cross_encoder_reranker.py` (lazy-import/DI pattern, honest-skip).
+- `packages/local_ai_rag/context_packers/budget_packer.py` — the curriculum's exact context
+  budget shape, source-diversity-capped packing, and lost-in-the-middle reordering (highest
+  relevance at both edges, weakest in the middle); `citation_packer.py` extended with
+  `summarize_source_citations()` for document-level citations.
+- `packages/local_ai_rag/incremental_indexer.py` — SHA-256 content-hash diffing: unchanged
+  documents skip re-embedding entirely, changed documents are fully re-indexed, removed
+  documents' chunks are deleted.
+- `packages/local_ai_rag/production_pipeline.py` (`ProductionRagPipeline`) — wires
+  rewrite/ACL-filter/retrieve/rerank/pack/generate/validate-citations/log-trace into one real
+  pipeline over any `Embedder`/`VectorStore`/`LLMRuntime`.
+- `scripts/module_12/`: `parent_child_demo.py` (Lab 1), `reranking_demo.py` (Labs 2-5, includes
+  a real ACL-tagged restricted document scenario), `incremental_indexing_demo.py` (Lab 6) — all
+  run against the Module 11 Nimbus handbook corpus.
+- `notebooks/12_rag_v2_production_retrieval.ipynb` — **executed end-to-end**, every cell a real
+  measurement.
+- `reports/module_12_production_retrieval_report.md` — deliverable, including a real
+  distinction between two different citation-grounding failures (ACL leak vs. packing drop)
+  and an honest report of where `FakeEmbedder` underserves parent-child retrieval and HyDE.
+- 104 new tests (1056 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Real bug found and fixed while building this module: `structural_chunker.py`'s table and code
+block extraction both used independently-numbered placeholder indices, causing a collision
+that silently duplicated one structural block's content over another's when a document
+contained both a table and a code block. Fixed by sharing one placeholder-index list across
+both extraction passes; caught by testing "both structures in one document" before shipping.
+
+Deliberately not done in Module 12:
+- Document parsing as code (PDF layout extraction, OCR, PyMuPDF/docling/markitdown/unstructured
+  comparison) — theory-only, see the theory doc's scope note.
+- Real cross-encoder reranking, real LLM-generated query rewrites/multi-queries/HyDE passages —
+  fully built and unit-tested, pending the resourced 32GB Mac.
+- Query classification (the production pipeline diagram's first stage) — no concrete decision
+  to route on with a single corpus and single retrieval strategy.
+- Sliding windows — already covered by Module 8's `chunk_text(..., overlap_chars=N)`, reused
+  unchanged rather than reimplemented.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -640,7 +702,7 @@ Deliberately not done in Module 11:
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 11. RAG v1: naive RAG | [x] | [x] | [x] | [x] | complete — loading/chunking/embedding/retrieval/prompt-assembly/citations all fully verified with real (non-fake) proof against a genuine 20-file corpus; only real answer generation pending a resourced Mac |
-| 12. RAG v2: production retrieval | [ ] | [ ] | [ ] | [ ] | not started |
+| 12. RAG v2: production retrieval | [x] | [x] | [x] | [x] | complete — chunking strategies, ACL/time-aware retrieval, heuristic reranking, context packing, source citations, and incremental indexing all fully verified with real (non-fake) proof; real generation and cross-encoder reranking pending a resourced Mac |
 | 13. RAG v3: evaluation, citations, and guardrails | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 4 — Agents/tools (Modules 14–17)

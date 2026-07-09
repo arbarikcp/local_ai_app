@@ -2,6 +2,7 @@ from local_ai_rag.context_packers.citation_packer import (
     build_context,
     build_rag_prompt,
     extract_citations,
+    summarize_source_citations,
 )
 from local_ai_rag.embeddings.embedder import SearchResult
 
@@ -53,3 +54,16 @@ class TestExtractCitations:
 
     def test_ignores_bracketed_text_that_is_not_chunk_id_shaped(self):
         assert extract_citations("See [not a citation] for details.") == []
+
+
+class TestSummarizeSourceCitations:
+    def test_reduces_chunk_citations_to_unique_doc_ids(self):
+        result = summarize_source_citations(["password_reset::0", "password_reset::1"])
+        assert result == ["password_reset"]
+
+    def test_preserves_first_seen_order_across_documents(self):
+        result = summarize_source_citations(["b::0", "a::0", "b::1"])
+        assert result == ["b", "a"]
+
+    def test_empty_input_returns_empty_list(self):
+        assert summarize_source_citations([]) == []

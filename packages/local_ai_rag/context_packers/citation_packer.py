@@ -50,3 +50,19 @@ def extract_citations(answer_text: str) -> list[str]:
         if match.group(1) not in seen:
             seen.append(match.group(1))
     return seen
+
+
+def summarize_source_citations(chunk_citations: list[str]) -> list[str]:
+    """Aggregates chunk-level citations (`doc_id::chunk_index`) up to
+    unique, deduplicated document-level citations (`doc_id`), in
+    first-seen order - Lab 5's "source-level citations": an end user
+    reading "see password_reset" doesn't need to know it came from chunk 2
+    specifically, and two citations from the same document shouldn't read
+    as two separate sources.
+    """
+    seen: list[str] = []
+    for chunk_id in chunk_citations:
+        doc_id = chunk_id.split("::", 1)[0]
+        if doc_id not in seen:
+            seen.append(doc_id)
+    return seen

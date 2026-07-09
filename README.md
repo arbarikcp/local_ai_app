@@ -403,10 +403,32 @@ markdown corpus; only answer generation needs a live LLM runtime. — curriculum
   — includes real (imperfect, honest) recall/precision/MRR/nDCG numbers, a real
   invented-citation detection demo, and a real chunk-size-vs-retrieval-quality comparison.
 
-#### ⬜ Module 12 — RAG v2: production retrieval
+#### ✅ Module 12 — RAG v2: production retrieval
 
-Evolves naive RAG into production-grade retrieval (deeper document parsing, hybrid search,
-reranking, context packing). — curriculum.md §22
+Evolves naive RAG into production-grade retrieval: semantic/structural/parent-child chunking,
+query rewriting/multi-query/HyDE, ACL- and time-aware retrieval, a real heuristic reranker,
+budget-based context packing with lost-in-the-middle mitigation, source-level citations, and
+incremental indexing. Every stage runs for real except final answer generation and the
+cross-encoder reranker. — curriculum.md §22
+
+- **Read:** [docs/modules/12_rag_v2_production_retrieval.md](docs/modules/12_rag_v2_production_retrieval.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/12_rag_v2_production_retrieval.ipynb   # real chunking/retrieval/ACL/packing/indexing, FakeRuntime for generation
+  uv run python scripts/module_12/parent_child_demo.py                 # runs for real, no installs needed
+  uv run python scripts/module_12/reranking_demo.py                    # runs for real, no installs needed
+  uv run python scripts/module_12/incremental_indexing_demo.py         # runs for real, no installs needed
+  uv run pytest packages/local_ai_rag scripts/module_12 -q             # 104 new tests, no runtime needed
+  ```
+- **Install needed:** nothing for chunking, retrieval, ACL/time-aware filtering, the heuristic
+  reranker, context packing, citations, or incremental indexing — all proven with real
+  (non-fake) results. Real answer generation needs Ollama/another `LLMRuntime` adapter; a real
+  cross-encoder reranker needs a downloaded `sentence-transformers` model — both on the
+  resourced Mac.
+- **Deliverable:** [reports/module_12_production_retrieval_report.md](reports/module_12_production_retrieval_report.md)
+  — includes a real ACL-leak-vs-packing-drop citation-grounding distinction, real incremental
+  indexing savings, and an honest (not cherry-picked) report of where `FakeEmbedder` underserves
+  parent-child retrieval and HyDE on this corpus.
 
 #### ⬜ Module 13 — RAG v3: evaluation, citations, and guardrails
 
