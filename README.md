@@ -458,10 +458,29 @@ curriculum.md §23
 
 ### Phase: Agents/tools
 
-#### ⬜ Module 14 — Tool calling and deterministic tool execution
+#### ✅ Module 14 — Tool calling and deterministic tool execution
 
 Safe tool calling where the LLM *proposes* and deterministic code *enforces* — argument
-validation, execution boundaries, and the tool error taxonomy. — curriculum.md §24
+validation, execution boundaries, and the tool error taxonomy. Almost no honest-skip surface —
+schema validation, the registry, permissions, approval gating, real SQLite-backed audit
+logging, and budgets are all deterministic and run for real. — curriculum.md §24
+
+- **Read:** [docs/modules/14_tool_calling_and_deterministic_execution.md](docs/modules/14_tool_calling_and_deterministic_execution.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/14_tool_calling_and_deterministic_execution.ipynb   # real safety mechanisms, FakeRuntime for tool selection only
+  uv run python scripts/module_14/tool_registry_demo.py                            # runs for real, no installs needed
+  uv run python scripts/module_14/approval_and_dangerous_tools_demo.py             # runs for real, no installs needed
+  uv run pytest packages/local_ai_agents scripts/module_14 -q                      # 124 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — every safety mechanism (AST-based calculator, path containment,
+  read-only SQL, permissions, approval gating, budgets, audit logging) is proven with real
+  (non-fake) results, including real code-injection and path-traversal payloads rejected. Only
+  LLM-proposed tool selection needs Ollama/another `LLMRuntime` adapter on the resourced Mac.
+- **Deliverable:** [reports/module_14_tool_calling_report.md](reports/module_14_tool_calling_report.md)
+  — includes real rejected attack payloads (code injection, path traversal, a pathlib
+  absolute-path-override gotcha), two independent SQL defense layers proven separately, and a
+  full permission → approval → budget → audit chain demonstrated end to end.
 
 #### ⬜ Module 15 — Agentic workflows without chaos
 

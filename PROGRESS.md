@@ -725,6 +725,51 @@ Deliberately not done in Module 13:
 - No separate RAG regression-testing framework — `run_rag_evaluation.py` re-run after any
   pipeline change, diffing the metrics table, is the regression test.
 
+## Module 14 detail (done 2026-07-09)
+
+Almost no honest-skip surface this module — schema validation, the tool registry, permissions,
+approval gating, tool budgets, and real SQLite-backed audit logging are all deterministic
+Python with zero model dependency. Only LLM-proposed tool selection needs a live LLM.
+
+Built:
+- `docs/modules/14_tool_calling_and_deterministic_execution.md` — theory chapter covering all
+  12 core topics, the tool execution rule, curriculum's dangerous-tools list, and the four
+  tools' real safety mechanisms.
+- `packages/local_ai_agents/tools/`: `base.py` (`Tool`/`ToolResult`/error taxonomy),
+  `registry.py`, `tool_call.py` (LLM tool-selection proposal parsing), `sandbox.py` (shared
+  path-containment logic), `calculator.py` (AST-whitelist safe evaluator, not `eval()`),
+  `file_search.py` (curriculum's own `SearchFilesArgs` example), `sql_query.py` (two
+  independent read-only defense layers), `write_file.py` (the one dangerous tool, approval-gated).
+- `packages/local_ai_agents/policies/`: `permissions.py` (role-based allow/deny),
+  `approval.py` (`NullApprovalGate` fails closed, `CallbackApprovalGate` for real use,
+  `AutoApprovalGate` tests-only), `budgets.py` (total + per-tool call limits),
+  `audit_log.py` (real SQLite persistence, same pattern as Module 8.5's `SessionStore`).
+- `packages/local_ai_agents/executors/tool_executor.py` — the deterministic enforcement chain:
+  registry → permissions → argument validation → approval (if dangerous) → budget → handler →
+  audit log, every attempt logged regardless of outcome.
+- `scripts/module_14/`: `tool_registry_demo.py` (Labs 1-4, over the real Nimbus handbook corpus
+  and a real SQLite fixture database), `approval_and_dangerous_tools_demo.py` (Labs 5-6).
+- `notebooks/14_tool_calling_and_deterministic_execution.ipynb` — **executed end-to-end**,
+  including real rejected code-injection and path-traversal payloads.
+- `reports/module_14_tool_calling_report.md` — deliverable, including a real pathlib
+  absolute-path-override gotcha caught by the sandbox check and two independently-verified SQL
+  defense layers.
+- 124 new tests (1272 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Real bug caught during development (not shipped): a test-collection module-name collision
+(`tools/tests/test_base.py` vs. `runtimes/tests/test_base.py`, and `tools/tests/test_registry.py`
+vs. `prompts/tests/test_registry.py`) — the same fix Module 11's `test_pipeline.py` needed,
+renamed to `test_tool_base.py`/`test_tool_registry.py` before running the full suite.
+
+Deliberately not done in Module 14:
+- No real LLM proposing tool calls — pending the resourced 32GB Mac.
+- Only one dangerous tool implemented (`write_file`) of curriculum's nine named categories —
+  the mechanism (dangerous flag → approval → audit log) is identical regardless of category.
+- `ToolExecutor` doesn't distinguish handler-raised domain errors (e.g. `sql_query.py`'s
+  `UnsafeQueryError`) as a separately-typed exception — captured in `ToolResult.error_message`
+  and the audit log either way, just not separately catchable by a caller.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -763,7 +808,12 @@ Deliberately not done in Module 13:
 
 ## Phase 4 — Agents/tools (Modules 14–17)
 
-All not started.
+| Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
+|---|---|---|---|---|---|
+| 14. Tool calling and deterministic tool execution | [x] | [x] | [x] | [x] | complete — schema validation, registry, permissions, approval, budgets, and audit logging all fully verified with real (non-fake) proof; only LLM-proposed tool selection pending a resourced Mac |
+| 15. Agentic workflows without chaos | [ ] | [ ] | [ ] | [ ] | not started |
+| 16. MCP and local tool ecosystems | [ ] | [ ] | [ ] | [ ] | not started |
+| 17. Local coding assistants | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Phase 5 — Advanced (Modules 18–19)
 
