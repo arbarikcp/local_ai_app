@@ -1084,6 +1084,60 @@ Deliberately not done in Module 21:
 - A rendered HTML/web dashboard — Lab 6 is a printed markdown report, curriculum's explicit
   "dashboard *or* report" choice, consistent with every other module's report-based deliverable.
 
+## Module 22 detail (done 2026-07-10)
+
+Composes real, tested security infrastructure from Modules 14-16 (permission allowlists,
+approval workflow, audit logging, tool budgets, loop prevention, path sandboxing, a first-pass
+prompt-injection screen already wired into Module 16's MCP-like server) and Module 21 (PII
+redaction, policy-driven prompt logging), then fills five genuine gaps: a guard-classifier
+pipeline, RAG ingestion screening, model supply-chain checksum verification, secrets detection,
+and per-tool-call timeouts. `runtimes/errors.py`'s `SafetyPolicyViolation` - declared since
+Module 6, never once raised anywhere in this repo - is now genuinely implemented and tested.
+
+Built:
+- `docs/modules/22_security_privacy_and_red_teaming.md` — theory chapter covering all 14 core
+  topics, an explicit reuse table citing exact classes/functions from Modules 14-16/21, and a
+  module-boundary note: this module only adds code under `packages/local_ai_core/security/`,
+  never editing `local_ai_agents`, `local_ai_core.evals`, or `local_ai_core.prompts`.
+- `packages/local_ai_core/security/`: `threat_model.py` (`ThreatSurface` enum, `OWASP_RISK_MAP`
+  as real importable data), `secrets_scanner.py` (`scan_for_secrets()` - AWS keys, private key
+  headers, bearer tokens, generic API keys), `guard_pipeline.py`
+  (`RuleBasedGuardClassifier`/`GuardVerdict`/`enforce_guard_decision()` - the first real caller
+  of `SafetyPolicyViolation`), `guard_eval.py` (`evaluate_guard_classifier()` - real catch-rate/
+  false-positive-rate/latency measurement), `rag_ingestion_guard.py`
+  (`screen_document_for_ingestion()` - screens regardless of declared source trust),
+  `supply_chain.py` (`verify_against_manifest()` - real SHA-256 checksum verification),
+  `tool_call_timeout.py` (`with_timeout()` - reuses Module 6's `RequestTimeout` rather than a
+  new error type).
+- `datasets/red_team/red_team_prompts.jsonl` — 39 real, hand-labeled examples (25 malicious, 14
+  benign) spanning all 9 curriculum threat surfaces and 7 categories, continuing the Nimbus
+  support theme.
+- `scripts/module_22/`: `red_team_dataset_demo.py` (Lab 1), `rag_poisoning_demo.py` (Lab 2),
+  `tool_injection_demo.py` (Labs 3-5 - a real injected dangerous call denied by Module 14's
+  unchanged `ToolExecutor`, a real legitimate call approval-gated), `guard_classifier_eval_demo.py`
+  (Labs 6-7).
+- `notebooks/22_security_privacy_and_red_teaming.ipynb` — **executed end-to-end**, every cell a
+  real computation.
+- `reports/module_22_security_report.md` — deliverable, including a real 96% catch rate with
+  zero false positives and one honestly-documented false negative (an underscore-separated
+  filename the regex screen doesn't match), plus a flagged-not-fixed finding: two independent,
+  non-cross-referenced injection screens exist in the repo (`evals/prompt_injection.py`, wired;
+  `prompts/injection_guard.py`, dead code) - left as a finding since fixing either crosses a
+  module boundary this repo's convention says to ask about first.
+- 55 new tests (1750 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+Deliberately not done in Module 22:
+- A real ML-based guard model (Llama-Guard/Granite-Guardian-style) — curriculum explicitly wants
+  this evaluated as a security component, but this machine runs no model at all;
+  `RuleBasedGuardClassifier` implements the same `GuardClassifier` Protocol a model-backed
+  classifier would need, so swapping one in later needs no pipeline changes.
+- Consolidating the two injection-pattern screens — a real finding, left as a finding rather
+  than an unauthorized cross-module edit.
+- A real model supply-chain manifest for this course's actual model catalog —
+  `supply_chain.py` is fully built and tested against synthetic files; populating it with real
+  checksums is deferred to the resourced Mac.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1141,7 +1195,7 @@ Deliberately not done in Module 21:
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
 |---|---|---|---|---|---|
 | 21. Observability and tracing | [x] | [x] | [x] | [x] | complete — structured logs, PII redaction, metrics registry, trace spans, and eval/feedback store all fully verified with real (non-fake) proof; no honest-skip surface, genuinely new code |
-| 22. Security, privacy, and red teaming | [ ] | [ ] | [ ] | [ ] | not started |
+| 22. Security, privacy, and red teaming | [x] | [x] | [x] | [x] | complete — guard classifier, RAG ingestion guard, supply-chain verification, secrets scanner, and tool-call timeout all fully verified with real (non-fake) proof against a real red-team dataset; only a real ML-based guard model pending a resourced Mac |
 | 23. Packaging and deployment | [ ] | [ ] | [ ] | [ ] | not started |
 
 ## Projects & capstone

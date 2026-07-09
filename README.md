@@ -660,11 +660,36 @@ empty until this module. — curriculum.md §31
   — includes a real cosine-similarity RAG retrieval trace and a real proof that PII redaction
   correctly resolves overlapping categories (an SSN is never miscounted as a phone number).
 
-#### ⬜ Module 22 — Security, privacy, and red teaming
+#### ✅ Module 22 — Security, privacy, and red teaming
 
 Secures local AI apps against realistic threats (prompt injection, unsafe tool execution,
-insecure storage) — the module that makes precise the Module 1 point that local ≠ secure. —
+insecure storage) — the module that makes precise the Module 1 point that local ≠ secure.
+Composes real security infrastructure from Modules 14-16 and 21 (permissions, approval, audit
+logging, sandboxing, PII redaction) and fills five genuine gaps: a rule-based guard classifier,
+RAG ingestion screening, model supply-chain checksum verification, secrets detection, and
+per-tool-call timeouts. Evaluated against a real 39-example hand-labeled red-team dataset:
+96% catch rate, zero false positives, one honestly-documented false negative. —
 curriculum.md §32
+
+- **Read:** [docs/modules/22_security_privacy_and_red_teaming.md](docs/modules/22_security_privacy_and_red_teaming.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/22_security_privacy_and_red_teaming.ipynb   # real guard/threat/redaction work, no installs needed
+  uv run python scripts/module_22/tool_injection_demo.py                    # runs for real, no installs needed
+  uv run python scripts/module_22/guard_classifier_eval_demo.py             # runs for real, no installs needed
+  uv run python scripts/module_22/rag_poisoning_demo.py                     # runs for real, no installs needed
+  uv run pytest packages/local_ai_core/security scripts/module_22 -q        # 55 new tests, no runtime needed
+  ```
+- **Install needed:** nothing — the guard pipeline, RAG ingestion guard, supply-chain
+  verification, secrets scanner, and tool-call timeout are all stdlib Python composed with
+  Modules 14-16/21's existing infrastructure. A real ML-based guard model (Llama-Guard-style) is
+  deliberately deferred to the resourced Mac; `RuleBasedGuardClassifier` implements the same
+  `GuardClassifier` Protocol a model-backed classifier would need.
+- **Deliverable:** [reports/module_22_security_report.md](reports/module_22_security_report.md)
+  — includes a real 96% catch rate against the red-team set with an honestly surfaced false
+  negative (an underscore-separated filename the regex screen misses), and a real proof that an
+  injected dangerous tool call is denied while a legitimate approval-gated one succeeds, both
+  through Module 14's unchanged `ToolExecutor`.
 
 #### ⬜ Module 23 — Packaging and deployment
 
