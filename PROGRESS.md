@@ -1298,6 +1298,58 @@ Deliberately not done in Project 2:
 - A dedicated pre-retrieval unanswerable-question classifier — abstention currently relies on
   the prompt template's own instruction plus post-hoc evaluation.
 
+## Project 3 detail (done 2026-07-10)
+
+Maps directly onto Module 17 (Local coding assistants) — nearly every individual tool a coding
+assistant needs (AST symbol listing, repo search, sandboxed file reads, unified-diff proposal/
+validation/application, sandboxed test running) already existed real and tested. Project 3's own
+work: an intent classifier (nothing in the repo classified free-text requests before this), two
+real gaps closed in patch validation (unrelated-file-change detection, hunk line-count
+validation), a real unsafe-command allowlist, `Tool` wrappers for the patch functions (previously
+bypassing `ToolExecutor`'s audit/permission/approval/budget layer entirely), and a richer
+multi-file demo repo (`mini_calculator` was explicitly named too small in Module 17's own
+report).
+
+Built:
+- `projects/03_engineering_assistant/PROPOSAL.md`, `ARCHITECTURE.md` — written before code.
+- `projects/03_engineering_assistant/demo_repo/` — a real, richer, 3-source-file +
+  3-test-file inventory-management package, deliberately excluded from the main pytest run
+  (`pyproject.toml`'s `norecursedirs`) since it contains one real, currently-failing test proving
+  a real bug (`remove_stock()` doesn't validate against removing more than available quantity).
+- `projects/03_engineering_assistant/app/`: `eng_intent_classifier.py` (real keyword routing
+  across 7 intent types), `eng_context_builder.py` (composes Module 17's tools into one bundle
+  per intent), `eng_patch_guard.py` (`validate_patch_scope()`, `validate_hunk_line_counts()` —
+  the two real gaps), `eng_command_safety.py` (real allowlist rejection of unsafe commands),
+  `eng_tools.py` (`Tool` wrappers for `propose_patch`/`apply_patch`/`run_tests`, uniform
+  `with_timeout()` wiring via Module 22), `eng_service.py` (composition root, extends Module 23's
+  `AppContext`), `eng_cli.py` (a real `typer` CLI: `explain-repo`, `search`, `explain-symbol`,
+  `generate-tests`, `suggest-refactor`, `propose-patch`, `apply-patch`, `run-tests`).
+- `projects/03_engineering_assistant/prompts/eng_prompts.py` — the three new code-specific
+  prompt templates ("explain a function/class" and "suggest refactoring" had none anywhere).
+- `projects/03_engineering_assistant/evals/`: `eng_golden_set.jsonl` (16 labeled intent
+  requests), `run_eng_eval.py` (intent accuracy + all 6 curriculum-named failure cases, each
+  proven caught for real against a fresh sandboxed copy of `demo_repo/`).
+- `projects/03_engineering_assistant/README.md`, `REPORT.md`, `OUTRO.md`.
+- 66 new tests; 1999 total in the repo now, 2 correctly-skipped, all passing; `ruff check .`
+  clean.
+
+Real, honest findings documented in REPORT.md rather than hidden: intent classification measured
+at 93.75% (15/16), with the one miss ("Execute the test suite." not matching any `RUN_TESTS`
+keyword substring) left unfixed on purpose to prove the eval harness catches real misses; all six
+curriculum-named failure cases (invented file path, unrelated file change, unsafe shell command,
+invalid patch, missing dependency/import, unrunnable tests) proven caught with real adversarial
+inputs against a real sandboxed repo — including a real `NameError` and a real `SyntaxError`
+surfaced by actually running `pytest`, not simulated.
+
+Deliberately not done in Project 3:
+- Real patch/test/explanation quality — every result is mechanically real; none reflect how well
+  a real model proposes a patch, writes a test, or explains code. Deferred to the resourced 32GB
+  Mac via `build_eng_context(..., runtime=...)`.
+- A FastAPI service — curriculum gives Projects 1/2 explicit API sketches but none for Project 3;
+  its own deployment-modes table names CLI as the right fit for a developer tool.
+- Multi-file unified diffs — `patch_tools.py`'s parser (Module 17, unmodified) only ever
+  extracts one `file_path` per patch.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1364,7 +1416,7 @@ Deliberately not done in Project 2:
 |---|---|---|
 | 1. Local structured extraction service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 62 new tests | complete — real FastAPI service, real SQLite storage, real evaluation harness, both schemas fully verified with real (non-fake) proof; only real model quality pending a resourced Mac |
 | 2. Production local RAG service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 68 new tests | complete — real FastAPI service, real LanceDB persistence, real ingestion-guard wiring, real evaluation harness all fully verified with real (non-fake) proof; only real embedding/generation quality pending a resourced Mac |
-| 3. Local engineering assistant | — | not started |
+| 3. Local engineering assistant | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 66 new tests | complete — real CLI, real patch validation/application/test-running, all 6 curriculum failure cases proven caught for real; only real patch/test/explanation quality pending a resourced Mac |
 | 4. Multimodal document analyst | — | not started |
 | 5. Local inference gateway | — | not started |
 | Capstone — Local enterprise AI assistant platform | — | not started |

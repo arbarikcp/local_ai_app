@@ -55,7 +55,13 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["packages", "scripts", "projects", "tests"]
-pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17", "scripts/module_18", "scripts/module_19", "scripts/module_20", "scripts/module_21", "scripts/module_22", "scripts/module_23", "projects/01_structured_extraction/app", "projects/01_structured_extraction/schemas", "projects/01_structured_extraction/prompts", "projects/01_structured_extraction/evals", "projects/02_production_rag/app", "projects/02_production_rag/schemas", "projects/02_production_rag/prompts", "projects/02_production_rag/evals"]
+# demo_repo/ (Project 3) deliberately contains a real, currently-failing
+# test proving a real pre-existing bug (ARCHITECTURE.md "The demo repo") -
+# excluded from the main suite's collection so the repo's own `pytest -q`
+# stays all-green; `run_eng_eval.py` runs demo_repo's tests explicitly,
+# in its own sandboxed subprocess, not via this config.
+norecursedirs = ["*.egg", ".*", "_darcs", "build", "CVS", "dist", "node_modules", "venv", "{arch}", "demo_repo"]
+pythonpath = ["packages", "scripts/module_01", "scripts/module_02", "scripts/module_03", "scripts/module_04", "scripts/module_05", "scripts/module_06_5", "scripts/module_07", "scripts/module_08", "scripts/module_08_5", "scripts/module_09", "scripts/module_10", "scripts/module_11", "scripts/module_12", "scripts/module_13", "scripts/module_14", "scripts/module_15", "scripts/module_16", "scripts/module_17", "scripts/module_18", "scripts/module_19", "scripts/module_20", "scripts/module_21", "scripts/module_22", "scripts/module_23", "projects/01_structured_extraction/app", "projects/01_structured_extraction/schemas", "projects/01_structured_extraction/prompts", "projects/01_structured_extraction/evals", "projects/02_production_rag/app", "projects/02_production_rag/schemas", "projects/02_production_rag/prompts", "projects/02_production_rag/evals", "projects/03_engineering_assistant/app", "projects/03_engineering_assistant/schemas", "projects/03_engineering_assistant/prompts", "projects/03_engineering_assistant/evals"]
 asyncio_mode = "auto"
 
 [tool.ruff]

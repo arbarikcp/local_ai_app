@@ -1,0 +1,16 @@
+{"request": "Give me an overview of this repo's structure.", "expected_intent": "explain_repo"}
+{"request": "What is this repo?", "expected_intent": "explain_repo"}
+{"request": "Search for the word quantity in the repo.", "expected_intent": "search_code"}
+{"request": "Where is StockItem used?", "expected_intent": "search_code"}
+{"request": "Find all references to apply_tax.", "expected_intent": "search_code"}
+{"request": "Explain function remove_stock.", "expected_intent": "explain_symbol"}
+{"request": "Explain class StockItem.", "expected_intent": "explain_symbol"}
+{"request": "What does calculate_discount do?", "expected_intent": "explain_symbol"}
+{"request": "Please generate tests for pricing.py.", "expected_intent": "generate_tests"}
+{"request": "Write test coverage for remove_stock.", "expected_intent": "generate_tests"}
+{"request": "Can you refactor the reports module?", "expected_intent": "suggest_refactor"}
+{"request": "Please clean up the stock.py file.", "expected_intent": "suggest_refactor"}
+{"request": "There's a bug in remove_stock, please fix it.", "expected_intent": "propose_patch"}
+{"request": "Propose a change to validate the discount percentage.", "expected_intent": "propose_patch"}
+{"request": "Run the tests please.", "expected_intent": "run_tests"}
+{"request": "Execute the test suite.", "expected_intent": "run_tests"}
