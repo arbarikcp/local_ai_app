@@ -1138,6 +1138,59 @@ Deliberately not done in Module 22:
   `supply_chain.py` is fully built and tested against synthetic files; populating it with real
   checksums is deferred to the resourced Mac.
 
+## Module 23 detail (done 2026-07-10)
+
+The first module to build a real composition root — every prior module's demo script wired its
+own ad hoc subset of imports; nothing before this assembled runtime + gateway admission control
++ security guard pipeline + metrics into one running application. Closes out the Production
+phase and the full Module 1-23 curriculum arc.
+
+Built:
+- `docs/modules/23_packaging_and_deployment.md` — theory chapter covering all 13 core topics,
+  a reuse table, and a module-boundary note: `packages/local_ai_gateway/` is reserved for
+  Project 5 (curriculum.md §38), not touched here.
+- `config/app.example.yaml` — real, committed, matches curriculum's exact config example.
+- `pyproject.toml` — added `pyyaml` as a real, direct dependency (was only transitive before);
+  `fastapi`/`uvicorn`/`typer` (real dependencies since Phase 0) used for real for the first time.
+- `packages/local_ai_core/deployment/`: `config.py` (`AppConfig`/`load_config()` - real Pydantic
+  validation), `model_registry.py` (`parse_model_catalog()` - the first program to ever read
+  `models/MODEL_CATALOG.md` programmatically, all 10 real entries, including a genuine tri-state
+  `mlx: true/false/maybe` field), `data_dir.py` (`ensure_data_dir_layout()` - real subdirectories
+  under `app.data_dir`, one per existing SQLite store), `health.py` (`run_startup_checks()`,
+  `run_readiness_check()`, `run_liveness_check()` - real, executable checks), `backup.py`
+  (`backup_sqlite_db()`/`restore_sqlite_db()` - real `sqlite3` `.backup()` API), `app_context.py`
+  (`AppContext`/`build_app_context()` - the composition root).
+- `scripts/module_23/`: `cli_app.py` (Lab 1 - a real `typer` CLI: `check`, `models`,
+  `backup`/`restore`/`list-backup-files`, `serve`), `api_app.py` (Lab 2 - a real FastAPI app:
+  `/health`, `/ready`, `/models`, a guarded `/chat`, tested via `TestClient`),
+  `config_and_registry_demo.py` (Labs 3-4), `startup_checks_demo.py` (Lab 5).
+- `docs/runbooks/operations_runbook.md` — Lab 6, a real, concrete runbook with a troubleshooting
+  table mapping this repo's own real error types to operator actions.
+- `notebooks/23_packaging_and_deployment.ipynb` — **executed end-to-end**, every cell a real
+  computation, entirely in temporary directories.
+- `reports/module_23_packaging_report.md` — deliverable, including a real bug caught by parsing
+  the real model catalog (a tri-state field a naive boolean coercion crashed on) and a real proof
+  that the guarded `/chat` endpoint blocks an injection attempt inside an actual HTTP handler.
+- 53 new tests (1803 total in the repo now, 2 correctly-skipped, all passing); `ruff check .`
+  clean.
+
+A real, disclosed side effect: the default `config/app.example.yaml` (matching curriculum's own
+example, `app.data_dir: ~/.local-llm-ai`) writes real, small, harmless directories and an empty
+SQLite audit log to the user's actual home directory when the CLI runs with default settings -
+expected, documented behavior for a real packaged local app, not a bug. Every test and notebook
+cell in this module deliberately uses a temporary directory instead (verified by checking the
+real `~/.local-llm-ai/audit/audit.db`'s mtime was unchanged before and after the full suite ran).
+
+Deliberately not done in Module 23:
+- A real model runtime behind the API — `/chat` is `FakeRuntime`-backed, this repo's standing
+  honest-skip default since Module 6; `AppContext`'s dependency injection means swapping in a
+  real runtime on the resourced Mac needs no other change.
+- `packages/local_ai_gateway/` — reserved for Project 5 (Local inference gateway), a later,
+  differently-scoped unit of work. Not touched.
+- A local web UI, desktop wrapper, or real Docker build — theory only; curriculum's own
+  deployment-modes table marks these as optional/demo-oriented, and this repo's machine
+  constraint makes a Docker image with model support untestable here anyway.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1196,7 +1249,7 @@ Deliberately not done in Module 22:
 |---|---|---|---|---|---|
 | 21. Observability and tracing | [x] | [x] | [x] | [x] | complete — structured logs, PII redaction, metrics registry, trace spans, and eval/feedback store all fully verified with real (non-fake) proof; no honest-skip surface, genuinely new code |
 | 22. Security, privacy, and red teaming | [x] | [x] | [x] | [x] | complete — guard classifier, RAG ingestion guard, supply-chain verification, secrets scanner, and tool-call timeout all fully verified with real (non-fake) proof against a real red-team dataset; only a real ML-based guard model pending a resourced Mac |
-| 23. Packaging and deployment | [ ] | [ ] | [ ] | [ ] | not started |
+| 23. Packaging and deployment | [x] | [x] | [x] | [x] | complete — first composition root in the repo (AppContext), real CLI (typer) and FastAPI service, real config/model-registry/health-check/backup infra all fully verified with real (non-fake) proof; only a real model runtime behind the API pending a resourced Mac. Closes the Module 1-23 arc. |
 
 ## Projects & capstone
 

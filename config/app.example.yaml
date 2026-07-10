@@ -1,0 +1,20 @@
+app:
+  data_dir: ~/.local-llm-ai
+  log_level: INFO
+
+models:
+  default_chat: llama3.2:3b
+  default_extraction: gemma3:4b
+  default_code: qwen2.5-coder:7b
+  default_embedding: nomic-embed-text
+
+limits:
+  max_prompt_tokens: 6000
+  max_output_tokens: 1024
+  request_timeout_seconds: 60
+  max_concurrent_requests: 1  # deliberate Mac-local default; see Module 6.5 concurrency benchmarks
+
+security:
+  allow_shell: false
+  allow_file_write: approval_required
+  redact_pii_in_logs: true

@@ -691,10 +691,37 @@ curriculum.md §32
   injected dangerous tool call is denied while a legitimate approval-gated one succeeds, both
   through Module 14's unchanged `ToolExecutor`.
 
-#### ⬜ Module 23 — Packaging and deployment
+#### ✅ Module 23 — Packaging and deployment
 
 Packages local AI apps for realistic use: reproducible environments, model distribution,
-runbooks. — curriculum.md §33
+runbooks. The first composition root in this repo (`AppContext`) — wires runtime, gateway
+admission control (Module 6.5), the security guard pipeline (Module 22), and metrics together —
+then a real `typer` CLI and a real FastAPI service on top of it (`/health`, `/ready`, `/models`,
+a guarded `/chat`). Real config loading, real model-registry parsing of Module 3's
+`MODEL_CATALOG.md`, real startup checks, and real SQLite backup/restore. Closes out the
+Production phase and the full Module 1-23 arc. — curriculum.md §33
+
+- **Read:** [docs/modules/23_packaging_and_deployment.md](docs/modules/23_packaging_and_deployment.md)
+- **Run:**
+  ```bash
+  uv run jupyter lab notebooks/23_packaging_and_deployment.ipynb   # real config/registry/CLI/API/backup work, no installs needed
+  uv run python scripts/module_23/cli_app.py check                  # runs for real, no installs needed
+  uv run python scripts/module_23/cli_app.py models                 # runs for real, no installs needed
+  uv run uvicorn api_app:app --app-dir scripts/module_23             # starts the real FastAPI service
+  uv run pytest packages/local_ai_core/deployment scripts/module_23 -q   # 53 new tests, no runtime needed
+  ```
+- **Install needed:** nothing new beyond `pyyaml` (added as a real, direct dependency this
+  module — a lightweight library, not an LLM runtime, same reasoning as Module 20's
+  `pymupdf`/`pdfplumber`/`pillow`). `fastapi`/`uvicorn`/`typer` were already real dependencies,
+  declared since Phase 0 and used for real for the first time in this module.
+- **Deliverable:** [reports/module_23_packaging_report.md](reports/module_23_packaging_report.md)
+  and [docs/runbooks/operations_runbook.md](docs/runbooks/operations_runbook.md) — includes a
+  real bug caught by parsing the real model catalog (a tri-state `mlx: true/false/maybe` field
+  that a naive boolean coercion crashed on) and a real proof that the guarded `/chat` endpoint
+  blocks an injection attempt inside an actual HTTP request handler.
+  ⚠️ Note: the default `config/app.example.yaml` (matching curriculum's own example) writes to
+  the real `~/.local-llm-ai` on this machine when run directly — expected, documented behavior,
+  not a bug; every test/notebook cell in this module uses a temporary directory instead.
 
 ### Projects & capstone
 
