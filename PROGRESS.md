@@ -1191,6 +1191,62 @@ Deliberately not done in Module 23:
   deployment-modes table marks these as optional/demo-oriented, and this repo's machine
   constraint makes a Docker image with model support untestable here anyway.
 
+## Project 1 detail (done 2026-07-10)
+
+First project in the repo, and the first to establish a documented, consistent project
+structure ([projects/PROJECT_TEMPLATE.md](../projects/PROJECT_TEMPLATE.md): PROPOSAL ->
+ARCHITECTURE -> code -> README -> REPORT -> OUTRO) that every later project (2-5, capstone) will
+follow. Heavily reuses Module 8's extraction pipeline and Module 23's composition root rather
+than rebuilding either.
+
+Built:
+- `projects/PROJECT_TEMPLATE.md` — the repo-wide project structure convention, including a
+  documented naming rule (every importable filename inside a project must carry a
+  project-specific prefix, e.g. `extraction_*`) to avoid import/test-collection collisions once
+  multiple projects share the same pytest process.
+- `projects/01_structured_extraction/PROPOSAL.md`, `ARCHITECTURE.md` — written before code, per
+  the template's own stated discipline.
+- `projects/01_structured_extraction/app/`: `extraction_storage.py` (real SQLite persistence,
+  the first "list needing review" query pattern in the repo), `extraction_normalization.py`
+  (real whitespace/control-char cleanup, real length-limit rejection), `extraction_service.py`
+  (the composition root, extends Module 23's `AppContext` with a storage handle; repair-retry
+  capped at 2 attempts per this project's spec), `extraction_api.py` (FastAPI: `/health`,
+  `/ready`, `POST /extract`, `GET /extractions/{id}`, `GET /extractions/low-confidence`).
+- `projects/01_structured_extraction/schemas/support_ticket_schema.py` — the second extraction
+  schema, continuing the Nimbus support-ticket theme with Module 19's exact category taxonomy.
+- `projects/01_structured_extraction/prompts/extraction_prompts.py` — schema registry + prompt
+  resolution, wrapping Module 8's `build_extraction_prompt` unchanged.
+- `projects/01_structured_extraction/evals/`: `extraction_dataset.jsonl` (10 real, hand-labeled
+  examples across both schemas), `extraction_metrics.py` (field exact match, missing-field rate,
+  hallucinated-field rate — all pure functions), `run_extraction_eval.py` (a real "perfect" vs.
+  "imperfect" scenario comparison, proving the metrics catch a real deliberately-broken run).
+- `projects/01_structured_extraction/README.md`, `REPORT.md`, `OUTRO.md`.
+- 62 new tests (61 in the project, 1 regression test added to Module 14's own `AuditLog` suite);
+  1865 total in the repo now, 2 correctly-skipped, all passing; `ruff check .` clean.
+
+A real cross-module bug found and fixed: Module 14's `AuditLog`
+(`packages/local_ai_agents/policies/audit_log.py`) created its `sqlite3` connection without
+`check_same_thread=False`, latent since Module 14 because nothing before this project actually
+called `audit_log.record()` from inside a request handler under `fastapi.testclient.TestClient`
+(which runs the ASGI app in its own thread). Flagged to the user before fixing since it's outside
+this project's folder boundary; user confirmed fixing directly. Fixed with the same one-line
+pattern already used in this project's own `extraction_storage.py`, plus a new regression test
+in Module 14's own `test_audit_log.py` using a real `threading.Thread`.
+
+A second finding (design tension, not a bug, worked around in the eval harness): Module 8's
+`InvoiceExtraction` requires a model-self-reported `confidence` field with no default, even
+though Module 8's own `compute_confidence()` never trusts that value - documented in REPORT.md
+rather than silently patched around.
+
+Deliberately not done in Project 1:
+- Real model quality — every metric is mechanically real (harness, storage, API, error handling
+  all genuinely exercised) but says nothing about a real model's actual extraction accuracy;
+  deferred to the resourced 32GB Mac, same as every module since Module 1.
+- File upload input — curriculum wants both text and file input; only JSON text is implemented,
+  file upload documented as a clear extension point in OUTRO.md.
+- PII redaction wired into extraction storage — Module 21's tools exist and are reusable but
+  weren't wired into this project's own storage layer; a real next step, not done here.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1253,7 +1309,14 @@ Deliberately not done in Module 23:
 
 ## Projects & capstone
 
-All not started.
+| Project | Structure | Status |
+|---|---|---|
+| 1. Local structured extraction service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 62 new tests | complete — real FastAPI service, real SQLite storage, real evaluation harness, both schemas fully verified with real (non-fake) proof; only real model quality pending a resourced Mac |
+| 2. Production local RAG service | — | not started |
+| 3. Local engineering assistant | — | not started |
+| 4. Multimodal document analyst | — | not started |
+| 5. Local inference gateway | — | not started |
+| Capstone — Local enterprise AI assistant platform | — | not started |
 
 ---
 

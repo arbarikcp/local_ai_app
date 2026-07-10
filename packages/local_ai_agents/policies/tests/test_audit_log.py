@@ -1,3 +1,5 @@
+import threading
+
 from local_ai_agents.policies.audit_log import AuditLog
 
 
@@ -33,6 +35,32 @@ class TestRecord:
         entries = log.entries_for_trace("trace-1")
         assert entries[0].outcome == "denied"
         assert entries[1].outcome == "error"
+        log.close()
+
+
+class TestCrossThreadAccess:
+    def test_record_works_from_a_different_thread_than_construction(self, tmp_path):
+        # Project 1's FastAPI test suite hit this for real: a caller that
+        # builds AuditLog once (e.g. at composition-root time) and then
+        # logs from inside a request handler running on a different
+        # thread (ASGI worker-thread dispatch, or a test client's
+        # dedicated event-loop thread) used to crash with
+        # sqlite3.ProgrammingError.
+        log = AuditLog(tmp_path / "audit.db")
+        error: list[Exception] = []
+
+        def record_from_other_thread() -> None:
+            try:
+                log.record("trace-1", "calculator", {"expression": "2+2"}, "success")
+            except Exception as exc:  # noqa: BLE001 - captured for the assertion below
+                error.append(exc)
+
+        thread = threading.Thread(target=record_from_other_thread)
+        thread.start()
+        thread.join()
+
+        assert error == []
+        assert len(log.entries_for_trace("trace-1")) == 1
         log.close()
 
 

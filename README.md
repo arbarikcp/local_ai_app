@@ -725,12 +725,13 @@ Production phase and the full Module 1-23 arc. — curriculum.md §33
 
 ### Projects & capstone
 
-Each project consumes several modules' worth of packages. Status tracked in PROGRESS.md; all
-⬜ not started.
+Each project consumes several modules' worth of packages. Status tracked in PROGRESS.md. Every
+project follows the same documented structure: [projects/PROJECT_TEMPLATE.md](projects/PROJECT_TEMPLATE.md)
+(PROPOSAL → ARCHITECTURE → code → README → REPORT → OUTRO).
 
 | Project | Objective | Curriculum ref |
 |---|---|---|
-| 1. Local structured extraction service | Production-like service extracting structured fields from documents with a local LLM | §34 |
+| ✅ 1. Local structured extraction service | Production-like FastAPI service extracting structured fields (invoices, support tickets) from documents with a local LLM — reuses Module 8's extraction pipeline and Module 23's composition root; a real cross-module thread-safety bug in Module 14's `AuditLog` found and fixed along the way. See [projects/01_structured_extraction/](projects/01_structured_extraction/). | §34 |
 | 2. Production local RAG service | Local RAG backend over private technical documents, with reranking and citation verification | §35 |
 | 3. Local engineering assistant | Repo-aware coding assistant: explain, search, test-generate, patch-propose with human approval | §36 |
 | 4. Multimodal document analyst | Analyze scanned documents/screenshots/diagrams with OCR + optional local VLM | §37 |

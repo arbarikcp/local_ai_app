@@ -26,7 +26,17 @@ class AuditEntry:
 
 class AuditLog:
     def __init__(self, db_path: Path | str) -> None:
-        self._conn = sqlite3.connect(str(db_path))
+        # check_same_thread=False: a caller that builds this once (e.g. at
+        # app-startup composition-root time) and then logs from inside a
+        # request handler crosses threads under ASGI servers that dispatch
+        # sync handlers to a worker pool, or under test clients that run
+        # the app in a dedicated event-loop thread (Project 1's own
+        # FastAPI test suite hit this for real: sqlite3.ProgrammingError,
+        # "objects created in a thread can only be used in that same
+        # thread"). Safe for the sequential-access pattern every caller in
+        # this repo actually uses; true concurrent multi-threaded writes
+        # would need an explicit lock or WAL mode.
+        self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS audit_entries (
