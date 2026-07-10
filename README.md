@@ -732,7 +732,7 @@ project follows the same documented structure: [projects/PROJECT_TEMPLATE.md](pr
 | Project | Objective | Curriculum ref |
 |---|---|---|
 | ✅ 1. Local structured extraction service | Production-like FastAPI service extracting structured fields (invoices, support tickets) from documents with a local LLM — reuses Module 8's extraction pipeline and Module 23's composition root; a real cross-module thread-safety bug in Module 14's `AuditLog` found and fixed along the way. See [projects/01_structured_extraction/](projects/01_structured_extraction/). | §34 |
-| 2. Production local RAG service | Local RAG backend over private technical documents, with reranking and citation verification | §35 |
+| ✅ 2. Production local RAG service | Local RAG backend over private technical documents (the real 20-doc Nimbus handbook corpus), with reranking, hybrid search, and citation verification as a real response-gate — almost entirely composed from Modules 9-13's already-tested RAG machinery; the first real wiring of Module 22's injection screen into an actual ingestion pipeline. See [projects/02_production_rag/](projects/02_production_rag/). | §35 |
 | 3. Local engineering assistant | Repo-aware coding assistant: explain, search, test-generate, patch-propose with human approval | §36 |
 | 4. Multimodal document analyst | Analyze scanned documents/screenshots/diagrams with OCR + optional local VLM | §37 |
 | 5. Local inference gateway | Production-style gateway: routing, streaming, tracing, fallback across runtimes | §38 |
