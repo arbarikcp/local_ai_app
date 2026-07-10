@@ -1,0 +1,13 @@
+routes:
+  extraction:
+    primary: qwen2.5:7b-instruct
+    fallback: qwen2.5:1.5b-instruct
+    max_context_tokens: 4096
+  code:
+    primary: qwen2.5-coder:7b
+    fallback: qwen2.5-coder:1.5b
+    max_context_tokens: 8192
+  chat:
+    primary: llama3.1:8b-instruct
+    fallback: qwen2.5:1.5b-instruct
+    max_context_tokens: 4096

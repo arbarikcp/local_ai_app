@@ -1417,6 +1417,67 @@ Deliberately not done in Project 4:
 - Layout/table-aware extraction — `extract_layout()`/`extract_tables()` (Module 18, real and
   tested) are not yet wired into `DocumentFieldExtraction`; extraction only sees flattened text.
 
+## Project 5 detail (done 2026-07-10)
+
+Maps directly onto curriculum's final architecture diagram (§39): a gateway in front of every
+other service, doing model routing, fallback, and admission control once. A survey before
+writing any code confirmed 9 of curriculum's 10 functional requirements already had real,
+already-tested infrastructure behind them (Modules 6, 6.5, 20, 21, 22, 23) — `LLMRuntime` and all
+four adapters, `ModelRegistry`, `FallbackRuntime`, `LLMRuntime.stream()`, `with_timeout()`,
+`AdmissionController`, `TraceBuilder`, `run_benchmark()`, and `run_liveness_check()`/
+`run_readiness_check()`. Project 5's own work: task-based routing (nothing in the repo mapped a
+task string to a model pair before this), a small runtime↔model binding adapter that lets the
+already-real `FallbackRuntime` carry two different models without changing `FallbackRuntime`
+itself, and streaming with fallback (`FallbackRuntime` has no `stream()` method, confirmed by
+survey, and no FastAPI streaming endpoint existed anywhere in the repo to model from).
+
+Built:
+- `projects/05_local_inference_gateway/PROPOSAL.md`, `ARCHITECTURE.md` — written before code.
+- `projects/05_local_inference_gateway/config/gateway_routes.yaml` — curriculum's own routes
+  shape, populated with real model_ids from the committed `models/MODEL_CATALOG.md` (`chat`/
+  `code` tasks map to real `category: chat`/`code` catalog entries; `extraction` reuses a
+  `category: chat` model since the real catalog has no separate `extraction` category — a
+  documented, deliberate choice, not a workaround).
+- `projects/05_local_inference_gateway/schemas/gw_schemas.py` — API request/response shapes.
+- `projects/05_local_inference_gateway/app/`: `gw_router.py` (`TaskRoute`, `load_routes()` —
+  validates every route's model_id against the real `ModelRegistry` at startup, not first
+  request), `gw_model_binding.py` (`ModelBoundRuntime` — binds a fixed model_id onto any
+  `LLMRuntime`, so `FallbackRuntime([ModelBoundRuntime(...), ModelBoundRuntime(...)])` reuses
+  Module 20's fallback chain completely unmodified), `gw_streaming.py`
+  (`stream_with_fallback()` — fallback only applies before the first chunk is yielded; a failure
+  after streaming has started propagates as a stream error instead of silently retrying, proven
+  with a custom test double whose stream yields one real chunk before raising), `gw_storage.py`
+  (SQLite per-request log), `gw_service.py` (composition root, `GatewayAppContext` extends
+  Module 23's `AppContext` with an independently-injectable `fallback_runtime`), `gw_api.py`
+  (FastAPI: `POST /generate`, `POST /stream`, `GET /requests/{id}`, `POST /benchmark`).
+- `projects/05_local_inference_gateway/evals/run_gw_eval.py` — not an accuracy-against-a-
+  labeled-dataset eval (a gateway has no "correct answer" to score) but 12 real, scripted
+  behavioral scenarios, one per curriculum requirement plus two adversarial ones (unknown task
+  rejected, both primary and fallback failing), each proving a real outcome rather than asserting
+  one.
+- `projects/05_local_inference_gateway/README.md`, `REPORT.md`, `OUTRO.md`.
+- 55 new tests; 2115 total in the repo now, 2 correctly-skipped, all passing; `ruff check .`
+  clean.
+
+Real, honest findings documented in REPORT.md rather than hidden: building streaming fallback for
+real required deciding exactly when fallback is still a legitimate operation for a stream (only
+pre-first-chunk — a client that already rendered part of an answer cannot cleanly have it
+silently replaced), a real design constraint discovered by building the feature, not assumed in
+advance.
+
+Deliberately not done in Project 5:
+- Real model latency/quality — every routing, fallback, timeout, and concurrency number is
+  mechanically real; what a real Ollama/MLX-backed route's actual latency and answer quality look
+  like is not. Deferred to the resourced 32GB Mac via
+  `build_gw_context(..., runtime=..., fallback_runtime=...)`.
+- Streaming-path observability of which model answered — `/generate`'s `used_fallback` field has
+  no `/stream` equivalent yet (a real, small, documented gap, not an oversight).
+- Response caching — `local_ai_core/gateway/cache.py`'s `ResponseCache`/`SemanticCache` are real
+  and available but unused here, since curriculum's own 10 requirements don't name caching.
+- A measured (rather than default) `AdmissionPolicy`/timeout for gateway workloads specifically —
+  Module 6.5's `recommend_policy_from_measurements()` is real and reusable but hasn't yet been
+  run against this project's own request shape.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1485,7 +1546,7 @@ Deliberately not done in Project 4:
 | 2. Production local RAG service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 68 new tests | complete — real FastAPI service, real LanceDB persistence, real ingestion-guard wiring, real evaluation harness all fully verified with real (non-fake) proof; only real embedding/generation quality pending a resourced Mac |
 | 3. Local engineering assistant | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 66 new tests | complete — real CLI, real patch validation/application/test-running, all 6 curriculum failure cases proven caught for real; only real patch/test/explanation quality pending a resourced Mac |
 | 4. Multimodal document analyst | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 61 new tests | complete — real FastAPI service, real per-page routing backed by real image-token-cost math (a confirmed gap closed), real citation-verified Q&A, real evaluation harness with both perfect and adversarial scenarios; only real VLM visual reasoning pending a resourced Mac |
-| 5. Local inference gateway | — | not started |
+| 5. Local inference gateway | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 55 new tests | complete — real FastAPI gateway, real task-based routing with real primary→fallback failover, real streaming with pre-first-chunk fallback, real timeout/concurrency enforcement, real per-request tracing and benchmarking, all 12 scenarios in a real behavioral eval harness proven passing; only real model latency/quality pending a resourced Mac |
 | Capstone — Local enterprise AI assistant platform | — | not started |
 
 ---
