@@ -1,0 +1,6 @@
+{"type": "page", "page_id": "multi_page_form::page1", "expected_route": "text_llm", "expected_text": "Nimbus Cloud Storage - Account Closure Request\nApplicant Name: Jordan Rivera\nAccount ID: NCS-88213\nRequest Date: 2026-06-15", "reference_fields": {"applicant_name": "Jordan Rivera", "key_date": "2026-06-15", "key_amount": null}}
+{"type": "page", "page_id": "multi_page_form::page2", "expected_route": "text_llm", "expected_text": "Reason for Closure\nThe applicant no longer requires cloud storage services and has migrated\nall data to a self-hosted solution.\nRefund Amount Owed: $42.50", "reference_fields": {"applicant_name": null, "key_date": null, "key_amount": 42.50}}
+{"type": "page", "page_id": "multi_page_form::page3", "expected_route": "vlm", "expected_text": "", "reference_fields": null}
+{"type": "question", "question_id": "q-001", "question": "What is the refund amount owed?", "expected_page_id": "multi_page_form::page2", "must_contain": "42.50"}
+{"type": "question", "question_id": "q-002", "question": "What is the applicant's name?", "expected_page_id": "multi_page_form::page1", "must_contain": "Jordan Rivera"}
+{"type": "question", "question_id": "q-003", "question": "What is the account ID?", "expected_page_id": "multi_page_form::page1", "must_contain": "NCS-88213"}

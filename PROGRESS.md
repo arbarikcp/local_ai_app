@@ -1350,6 +1350,73 @@ Deliberately not done in Project 3:
 - Multi-file unified diffs — `patch_tools.py`'s parser (Module 17, unmodified) only ever
   extracts one `file_path` per patch.
 
+## Project 4 detail (done 2026-07-10)
+
+Maps directly onto Module 18 (Multimodal document processing) — every individual piece (PDF page
+rendering, text-layer extraction, layout/table extraction, image preprocessing, the
+`VisionLanguageModel` protocol, `should_use_vlm()`'s routing signal, `estimate_image_tokens()`/
+`estimate_context_budget_impact()`'s image-cost math) already existed real and tested. A survey
+before writing any code confirmed three real gaps: the image-token math was never wired into an
+actual routing decision anywhere in the repo, both existing Module 18 fixtures are single-page
+(too small for page-level citations or a within-one-document OCR+LLM-vs-VLM comparison), and zero
+page/region-level citation concept existed anywhere in `packages/local_ai_core/tracing/`.
+Project 4's own work: closing the routing gap (`doc_routing.decide_route()`), a new 3-page
+fixture, and page-cited Q&A built by composing Project 2's `citations_are_grounded()` with
+page-encoded ids from `pdf_loader.py` — a second real finding surfaced while doing this:
+`citation_packer.extract_citations()`'s regex requires a trailing numeric chunk index and does
+NOT match a bare page id, confirmed by a real failing call before `doc_prompts.py`'s own
+page-id-shaped regex was written instead.
+
+Built:
+- `projects/04_multimodal_document_analyst/PROPOSAL.md`, `ARCHITECTURE.md` — written before code;
+  ARCHITECTURE.md corrected mid-build once the citation-regex finding above was confirmed.
+- `projects/04_multimodal_document_analyst/build_fixture.py` — builds
+  `datasets/multimodal/project_04/multi_page_form.pdf`, a real, committed 3-page "Account
+  Closure Request" form (2 digital-native text pages + 1 genuinely scanned image-only page,
+  confirmed 0-char text layer). Lives in its own `project_04/` subdirectory rather than directly
+  in `datasets/multimodal/` — confirmed by a real test failure that `scripts/module_18/
+  multimodal_rag_demo.py` globs every `*.pdf` there non-recursively with its own hardcoded
+  two-fixture assertions; moving the new fixture into a subdirectory the glob doesn't see fixed
+  it without touching Module 18's own files.
+- `projects/04_multimodal_document_analyst/schemas/doc_schemas.py` — `DocumentFieldExtraction`
+  (mirrors `InvoiceExtraction`'s confidence/evidence shape) plus API request/response schemas.
+- `projects/04_multimodal_document_analyst/app/`: `doc_storage.py` (SQLite, `documents` +
+  `page_analyses` tables, `check_same_thread=False` from the start), `doc_routing.py` (the
+  routing gap closure — `decide_route()` composes `should_use_vlm()` with real image-token-cost
+  math, only computed when the route actually is VLM), `doc_extraction.py` (thin wrapper over
+  Project 1's reused `ExtractionPipeline`), `doc_ingestion.py` (screen → route → extract-or-
+  describe → persist per page; a quarantined page is recorded, never rendered or sent to a
+  model), `doc_qa.py` (page-citation-verified Q&A, excludes quarantined pages from context),
+  `doc_service.py` (composition root, `DocAppContext` extends Module 23's `AppContext`),
+  `doc_api.py` (FastAPI: `POST /documents`, `GET /documents/{id}`, `POST /documents/{id}/extract`,
+  `POST /documents/{id}/query`).
+- `projects/04_multimodal_document_analyst/prompts/doc_prompts.py` — page-citation prompt
+  assembly and a new, page-id-shaped citation regex (the second real finding above).
+- `projects/04_multimodal_document_analyst/evals/`: `doc_golden_set.jsonl` (3 labeled pages + 3
+  labeled questions), `doc_eval_metrics.py`, `run_doc_eval.py` (perfect + adversarial scenarios,
+  the latter proving the metrics catch wrong fields and an invented citation for real).
+- `projects/04_multimodal_document_analyst/README.md`, `REPORT.md`, `OUTRO.md`.
+- 61 new tests; 2060 total in the repo now, 2 correctly-skipped, all passing; `ruff check .`
+  clean.
+
+Real, honest findings documented in REPORT.md rather than hidden: the adversarial eval scenario
+shows citation correctness and field-exact-match correctly collapse to 0% on a deliberately
+broken run, but answer-correctness (a substring check) stayed 100% even with an invented citation
+— a genuine, undoctored gap between "the answer text contains the right words" and "the answer is
+verifiably sourced," documented rather than smoothed over, and exactly why `verified: bool` is a
+separate, mandatory field per citation in the API response rather than folded into the answer
+text.
+
+Deliberately not done in Project 4:
+- Real VLM visual reasoning — `FakeVLM` returns the same scripted string regardless of image
+  content; the real routing decision and real image-token math are proven, what a real VLM would
+  actually see on the scanned page is not. Deferred to the resourced 32GB Mac via
+  `build_doc_context(..., vlm=...)`.
+- An image (non-PDF) input path — `render_page_to_image()` already returns a real `PIL.Image`,
+  documented as a small, well-scoped extension point rather than a functional gap.
+- Layout/table-aware extraction — `extract_layout()`/`extract_tables()` (Module 18, real and
+  tested) are not yet wired into `DocumentFieldExtraction`; extraction only sees flattened text.
+
 ## Phase 1 — Foundation (Modules 1–6)
 
 | Module | Theory doc | Notebook | Code + tests | Deliverable report | Status |
@@ -1417,7 +1484,7 @@ Deliberately not done in Project 3:
 | 1. Local structured extraction service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 62 new tests | complete — real FastAPI service, real SQLite storage, real evaluation harness, both schemas fully verified with real (non-fake) proof; only real model quality pending a resourced Mac |
 | 2. Production local RAG service | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 68 new tests | complete — real FastAPI service, real LanceDB persistence, real ingestion-guard wiring, real evaluation harness all fully verified with real (non-fake) proof; only real embedding/generation quality pending a resourced Mac |
 | 3. Local engineering assistant | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 66 new tests | complete — real CLI, real patch validation/application/test-running, all 6 curriculum failure cases proven caught for real; only real patch/test/explanation quality pending a resourced Mac |
-| 4. Multimodal document analyst | — | not started |
+| 4. Multimodal document analyst | PROPOSAL/ARCHITECTURE/README/REPORT/OUTRO all [x], 61 new tests | complete — real FastAPI service, real per-page routing backed by real image-token-cost math (a confirmed gap closed), real citation-verified Q&A, real evaluation harness with both perfect and adversarial scenarios; only real VLM visual reasoning pending a resourced Mac |
 | 5. Local inference gateway | — | not started |
 | Capstone — Local enterprise AI assistant platform | — | not started |
 
